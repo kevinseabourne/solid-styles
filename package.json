@@ -127,6 +127,28 @@
     "vite-plugin-solid": "2.11.6",
     "vitest": "3.2.4"
   },
+  "size-limit": [
+    {
+      "name": "Core Library",
+      "path": "./dist/src/index.ts",
+      "limit": "25 KB"
+    },
+    {
+      "name": "Animation System",
+      "path": "./dist/animation/index.ts",
+      "limit": "27 KB"
+    },
+    {
+      "name": "Spring Utilities",
+      "path": "./dist/utils/spring.ts",
+      "limit": "13 KB"
+    },
+    {
+      "name": "Gradient Utilities",
+      "path": "./dist/utils/gradient-numerical.ts",
+      "limit": "5 KB"
+    }
+  ],
   "engines": {
     "node": ">=16.0.0"
   }
