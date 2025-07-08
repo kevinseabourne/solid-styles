@@ -629,7 +629,7 @@ graph TD
 
 ## Visual Guides & Diagrams
 
-### **How Styled Components Work (First Principles)**
+### **How Solid Styles Works**
 
 ```mermaid
 graph LR;
