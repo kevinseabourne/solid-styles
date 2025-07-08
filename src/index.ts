@@ -25,7 +25,7 @@ type CssArg = string | number | boolean | undefined | null;
 // Type for the function that processes template literals and returns a Solid component
 // BaseP = Props of the underlying tag/component (e.g., JSX.IntrinsicElements['button'] or props of MyComponent)
 // UserP = Props provided by the user when defining the styled component (e.g., ButtonProps in styled.button<ButtonProps>)
-type StyledComponentDefiner<BaseP> = <UserP = {}>( // UserP represents the props specific to this styled component instance
+type StyledComponentDefiner<BaseP> = <UserP = Record<string, unknown>>( // UserP represents the props specific to this styled component instance
   strings: TemplateStringsArray,
   ...interpolations: Array<
     | string
@@ -48,9 +48,9 @@ interface IStyledFactory {
   // Signature for HTML tags: styled('div')
   <T extends keyof JSX.IntrinsicElements>(tag: T): StyledComponentDefiner<JSX.IntrinsicElements[T]>;
   // Signature for Solid components: styled(MySolidComponent)
-  <P extends {}>(tag: Component<P>): StyledComponentDefiner<P>;
+  <P extends Record<string, unknown>>(tag: Component<P>): StyledComponentDefiner<P>;
   // Signature for styled(styled(Component)) or styled(styled('div'))
-  <P extends {}>(tag: Component<P> & { defaultProps?: Partial<P>; toString?: () => string }): StyledComponentDefiner<P>;
+  <P extends Record<string, unknown>>(tag: Component<P> & { defaultProps?: Partial<P>; toString?: () => string }): StyledComponentDefiner<P>;
 }
 
 // SSR-safe implementation
@@ -573,7 +573,7 @@ if (!isServer) {
       document.head.appendChild(styleEl);
     }
 
-    const GlobalComponent: Component<{}> = () => {
+    const GlobalComponent: Component<Record<string, unknown>> = () => {
       onCleanup(() => {
         const el = document.getElementById(styleId);
         el?.remove();
@@ -691,7 +691,7 @@ if (!isServer) {
       document.head.appendChild(styleEl);
     }
 
-    const GlobalComponent: Component<{}> = () => {
+    const GlobalComponent: Component<Record<string, unknown>> = () => {
       onCleanup(() => {
         const el = document.getElementById(styleId);
         el?.remove();

@@ -126,6 +126,7 @@ export function enhancedStyled(tag: any) {
         }
 
         // Dynamically import the animated HOC only when not in tests
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const animatedModule = require("../animation/animatedStyled");
         const animated = animatedModule.animated;
 

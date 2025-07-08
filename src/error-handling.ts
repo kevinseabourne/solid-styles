@@ -435,12 +435,21 @@ export function devWarning(message: string, context?: Record<string, any>) {
   }
 }
 
+// Performance monitoring types
+type PerformanceResult<T> = { result: T; duration: number };
+type PerformanceFn<T> = () => T | Promise<T>;
+
+// Type guard for Promise detection
+function isPromiseLike<T>(value: T | Promise<T>): value is Promise<T> {
+  return value != null && typeof (value as Promise<T>).then === 'function';
+}
+
 // Performance monitoring
 export function measurePerformance<T>(
-  arg1: string | (() => T | Promise<T>),
-  arg2?: (() => T | Promise<T>) | string,
+  arg1: string | PerformanceFn<T>,
+  arg2?: PerformanceFn<T> | string,
   threshold: number = 16
-): Promise<{ result: T; duration: number }> | { result: T; duration: number } {
+): T | PerformanceResult<T> | Promise<PerformanceResult<T>> {
   // ------------------------------------------------------------------
   // API NORMALISATION
   // ------------------------------------------------------------------
@@ -449,15 +458,15 @@ export function measurePerformance<T>(
   // compatible we detect the parameter order at runtime.
   // ------------------------------------------------------------------
 
-  let fn: () => T | Promise<T>;
+  let fn: PerformanceFn<T>;
   let name: string;
 
   if (typeof arg1 === "function") {
-    fn = arg1 as () => T | Promise<T>;
-    name = (typeof arg2 === "string" ? arg2 : "Unnamed") as string;
+    fn = arg1;
+    name = (typeof arg2 === "string" ? arg2 : "Unnamed");
   } else {
     name = arg1;
-    fn = arg2 as () => T | Promise<T>;
+    fn = arg2 as PerformanceFn<T>;
   }
 
   const env = process.env.NODE_ENV ?? "development";
@@ -473,40 +482,31 @@ export function measurePerformance<T>(
       });
     }
 
-    if (env !== "production") {
-      console.log(`[Performance] ${name}:`, duration, "ms");
-    }
+    // Performance logging can be enabled with dev tooling if needed
   };
 
-  try {
-    const result = fn();
+  const result = fn();
 
-    const labelFirst = typeof arg1 === "string";
+  const labelFirst = typeof arg1 === "string";
 
-    const isThenable = typeof (result as any)?.then === "function";
-
-    if (isThenable) {
-      return (result as any).then((v: any) => {
-        const duration = performance.now() - start;
-        logIfNeeded(duration);
-        return { result: v, duration } as any;
-      }) as any;
-    }
-
-    const duration = performance.now() - start;
-    logIfNeeded(duration);
-
-    // If the caller used the (label, fn) signature (detected via `labelFirst`)
-    // and the result is synchronous, tests expect the **raw primitive**.
-    if (labelFirst) {
-      return result as any;
-    }
-
-    return { result: result as any, duration } as any;
-  } catch (err) {
-    // Re-throw to preserve original behaviour
-    throw err;
+  if (isPromiseLike(result)) {
+    return result.then((v: T): PerformanceResult<T> => {
+      const duration = performance.now() - start;
+      logIfNeeded(duration);
+      return { result: v, duration };
+    });
   }
+
+  const duration = performance.now() - start;
+  logIfNeeded(duration);
+
+  // If the caller used the (label, fn) signature (detected via `labelFirst`)
+  // and the result is synchronous, tests expect the **raw primitive**.
+  if (labelFirst) {
+    return result;
+  }
+
+  return { result, duration };
 }
 
 // Export error types for external use
