@@ -600,9 +600,9 @@ That's it. The build process handles everything else. You get all the benefits o
 **Chart: Bundle Size Comparison**
 
 ```mermaid
-graph TD;
-  A[styled-components (classic)] -->|~40KB+runtime| B[Your App]
-  C[solid-styles] -->|~21KB static| B
+graph TD
+  A["styled-components (classic)"] -->|"~40KB+runtime"| B["Your App"]
+  C["solid-styles"] -->|"~21KB static"| B
 ```
 
 ---
