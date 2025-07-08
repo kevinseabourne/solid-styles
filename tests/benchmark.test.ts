@@ -102,9 +102,11 @@ describe("Performance Benchmarks", () => {
       expect(StyledComponent).toBeDefined();
     }
     
-    // Force garbage collection if available
-    if (global.gc) {
+    // Force garbage collection if available (Node.js only)
+    if (typeof global !== 'undefined' && global.gc) {
       global.gc();
+    } else if (typeof window !== 'undefined' && (window as any).gc) {
+      (window as any).gc();
     }
     
     const finalMemory = (performance as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
