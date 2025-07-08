@@ -109,11 +109,7 @@ describe("Comprehensive Animation Tests", () => {
   });
 
   describe("Spring Animations", () => {
-    it("should animate using createSpring", async () => {
-      // Skip this test in CI environment due to timing sensitivity
-      if (process.env.CI) {
-        return;
-      }
+    (typeof process !== 'undefined' && process.env?.CI ? it.skip : it)("should animate using createSpring", async () => {
 
       const TestComponent = () => {
         const [value, setValue] = createSpring(0, {
