@@ -28,7 +28,7 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'warn',
     
     // Solid.js specific rules
-    'solid/reactivity': 'warn',
+    'solid/reactivity': 'off', // Disable due to TypeScript parsing issues
     'solid/no-destructure': 'warn',
     'solid/prefer-for': 'warn',
   },

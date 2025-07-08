@@ -109,7 +109,7 @@ describe("Comprehensive Animation Tests", () => {
   });
 
   describe("Spring Animations", () => {
-    (process.env.CI ? it.skip : it)("should animate using createSpring", async () => {
+    (import.meta.env?.CI ? it.skip : it)("should animate using createSpring", async () => {
       const TestComponent = () => {
         const [value, setValue] = createSpring(0, {
           stiffness: 170,
