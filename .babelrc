@@ -1,0 +1,8 @@
+{
+  "presets": [
+    ["babel-preset-solid", { 
+      "generate": "dom",
+      "hydratable": false
+    }]
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationDir": "./dist/types",
+    "emitDeclarationOnly": true,
+    "outDir": "./dist",
+    "types": ["node"],
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "src/**/*",
+    "animation/**/*",
+    "utils/**/*",
+    "lightning/**/*",
+    "hooks/**/*",
+    "lightning-setup.ts",
+    "types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests",
+    "examples",
+    "scripts",
+    "plugins",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "vitest.config.ssr.ts",
+    "animation-fix.js",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/debug-*.tsx",
+    "**/debug-*.ts"
+  ]
+}

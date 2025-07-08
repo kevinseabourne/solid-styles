@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Core (styled API only)",
+    "path": "dist/index.js",
+    "import": "{ styled }",
+    "limit": "25 KB"
+  },
+  {
+    "name": "Core + Spring Animations",
+    "path": "dist/animation.js",
+    "import": "{ useAnimation, animated }",
+    "limit": "25 KB"
+  },
+  {
+    "name": "Full Bundle",
+    "path": "dist/index.js",
+    "import": "*",
+    "limit": "30 KB"
+  },
+  {
+    "name": "Spring Module Only",
+    "path": "dist/utils/spring.js",
+    "import": "*",
+    "limit": "15 KB"
+  }
+]
