@@ -66,12 +66,21 @@ export default defineConfig({
         "tests/setup*.ts",
         "tests/**/lightningcss-browser-stub.ts",
         "tests/browser-test-utils.ts",
+        // Exclude non-library files from coverage
+        "**/.eslintrc.*",
+        "**/setup.js",
+        "**/lightning-setup.ts",
+        "**/animation-fix.js",
+        "**/plugins/**",
+        "**/scripts/**",
+        "**/transforms/**",
+        "**/types/index.ts", // Type-only files
       ],
       thresholds: {
-        lines: 30,
-        functions: 45,
-        branches: 55,
-        statements: 30,
+        lines: 55,
+        functions: 65,
+        branches: 70,
+        statements: 55,
       },
     },
     // Optimized for browser testing
