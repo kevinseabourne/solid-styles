@@ -138,14 +138,6 @@ jobs:
       
       - name: Run performance benchmarks
         run: pnpm test:benchmark
-      
-      - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
-        with:
-          tool: 'customBiggerIsBetter'
-          output-file-path: benchmark-results.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
 
   publish:
     name: Publish to NPM
