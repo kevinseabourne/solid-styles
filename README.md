@@ -133,10 +133,10 @@ src/
 
 **Works identically with both frameworks:**
 
-| Framework | Entry File | Build Tool | Status |
-|-----------|------------|------------|---------|
-| **Solid.js** | `src/index.tsx` | Vite | ✅ Auto-configured |
-| **SolidStart** | `src/app.tsx` | Vinxi | ✅ Auto-configured |
+| Framework      | Entry File      | Build Tool | Status             |
+| -------------- | --------------- | ---------- | ------------------ |
+| **Solid.js**   | `src/index.tsx` | Vite       | ✅ Auto-configured |
+| **SolidStart** | `src/app.tsx`   | Vinxi      | ✅ Auto-configured |
 
 ### 🎯 Complete Theme System Features
 
@@ -170,66 +170,68 @@ export interface Theme {
 }
 
 // Reactive theme signals
-export const [currentTheme, setCurrentTheme] = createSignal<'light' | 'dark'>('light');
-export const theme = () => currentTheme() === 'dark' ? darkTheme : lightTheme;
-export const toggleTheme = () => { /* Auto-generated toggle logic */ };
+export const [currentTheme, setCurrentTheme] = createSignal<"light" | "dark">("light");
+export const theme = () => (currentTheme() === "dark" ? darkTheme : lightTheme);
+export const toggleTheme = () => {
+  /* Auto-generated toggle logic */
+};
 ```
 
 ### 🔄 Usage Examples
 
-**Using the theme with styled components (correct syntax):**
+**Using the theme with solid styles (correct syntax):**
 
 ```tsx
-import { styled } from 'solid-styles';
-import { useTheme } from './components/ThemeProvider';
+import { styled } from "solid-styles";
+import { useTheme } from "./components/ThemeProvider";
 
 const ThemedContainer = styled.div`
-  background: ${(props) => props.theme?.colors?.background || '#ffffff'};
-  color: ${(props) => props.theme?.colors?.text || '#000000'};
-  padding: ${(props) => props.theme?.spacing?.md || '1rem'};
+  background: ${(props) => props.theme?.colors?.background || "#ffffff"};
+  color: ${(props) => props.theme?.colors?.text || "#000000"};
+  padding: ${(props) => props.theme?.spacing?.md || "1rem"};
   min-height: 100vh;
-  transition: ${(props) => props.theme?.transitions?.fast || '0.15s ease'};
+  transition: ${(props) => props.theme?.transitions?.fast || "0.15s ease"};
 `;
 
 const ThemedButton = styled.button`
   background: ${(props) => {
-    if (props.variant === 'primary') return props.theme?.colors?.primary || '#007bff';
-    if (props.variant === 'secondary') return props.theme?.colors?.secondary || '#6c757d';
-    return props.theme?.colors?.background || '#ffffff';
+    if (props.variant === "primary") return props.theme?.colors?.primary || "#007bff";
+    if (props.variant === "secondary") return props.theme?.colors?.secondary || "#6c757d";
+    return props.theme?.colors?.background || "#ffffff";
   }};
-  color: ${(props) => props.variant ? 'white' : (props.theme?.colors?.text || '#000000')};
-  padding: ${(props) => `${props.theme?.spacing?.sm || '0.5rem'} ${props.theme?.spacing?.md || '1rem'}`};
-  border-radius: ${(props) => props.theme?.borderRadius?.md || '0.375rem'};
+  color: ${(props) => (props.variant ? "white" : props.theme?.colors?.text || "#000000")};
+  padding: ${(props) => `${props.theme?.spacing?.sm || "0.5rem"} ${props.theme?.spacing?.md || "1rem"}`};
+  border-radius: ${(props) => props.theme?.borderRadius?.md || "0.375rem"};
   border: none;
   cursor: pointer;
-  font-weight: ${(props) => props.theme?.typography?.fontWeights?.medium || '500'};
-  transition: ${(props) => props.theme?.transitions?.fast || '0.15s ease'};
-  
+  font-weight: ${(props) => props.theme?.typography?.fontWeights?.medium || "500"};
+  transition: ${(props) => props.theme?.transitions?.fast || "0.15s ease"};
+
   &:hover {
     transform: translateY(-1px);
-    box-shadow: ${(props) => props.theme?.shadows?.md || '0 4px 6px rgba(0, 0, 0, 0.1)'};
+    box-shadow: ${(props) => props.theme?.shadows?.md || "0 4px 6px rgba(0, 0, 0, 0.1)"};
   }
 `;
 
 const Title = styled.h1`
-  font-size: ${(props) => props.theme?.typography?.fontSizes?.['2xl'] || '1.875rem'};
-  font-weight: ${(props) => props.theme?.typography?.fontWeights?.bold || '700'};
-  color: ${(props) => props.theme?.colors?.primary || '#007bff'};
-  margin-bottom: ${(props) => props.theme?.spacing?.lg || '1.5rem'};
+  font-size: ${(props) => props.theme?.typography?.fontSizes?.["2xl"] || "1.875rem"};
+  font-weight: ${(props) => props.theme?.typography?.fontWeights?.bold || "700"};
+  color: ${(props) => props.theme?.colors?.primary || "#007bff"};
+  margin-bottom: ${(props) => props.theme?.spacing?.lg || "1.5rem"};
 `;
 
 function MyComponent() {
   const { theme, toggleTheme, currentTheme } = useTheme();
-  
+
   return (
     <ThemedContainer theme={theme()}>
       <Title theme={theme()}>Current theme: {currentTheme()}</Title>
-      <ThemedButton 
-        theme={theme()} 
-        variant="primary" 
+      <ThemedButton
+        theme={theme()}
+        variant="primary"
         onClick={toggleTheme}
       >
-        Toggle to {currentTheme() === 'light' ? 'dark' : 'light'} mode
+        Toggle to {currentTheme() === "light" ? "dark" : "light"} mode
       </ThemedButton>
     </ThemedContainer>
   );
@@ -239,400 +241,38 @@ function MyComponent() {
 **Advanced theming with conditional styles:**
 
 ```tsx
-import { styled } from 'solid-styles';
-import { useTheme } from './components/ThemeProvider';
+import { styled } from "solid-styles";
+import { useTheme } from "./components/ThemeProvider";
 
 const AdaptiveCard = styled.div`
-  background: ${(props) => props.theme?.colors?.surface || '#ffffff'};
-  border: 1px solid ${(props) => props.theme?.colors?.border || '#e1e5e9'};
-  border-radius: ${(props) => props.theme?.borderRadius?.lg || '0.5rem'};
-  padding: ${(props) => props.theme?.spacing?.lg || '1.5rem'};
+  background: ${(props) => props.theme?.colors?.surface || "#ffffff"};
+  border: 1px solid ${(props) => props.theme?.colors?.border || "#e1e5e9"};
+  border-radius: ${(props) => props.theme?.borderRadius?.lg || "0.5rem"};
+  padding: ${(props) => props.theme?.spacing?.lg || "1.5rem"};
   box-shadow: ${(props) => {
-    const isDark = props.currentTheme === 'dark';
-    const darkShadow = props.theme?.shadows?.lg || '0 10px 25px rgba(0, 0, 0, 0.3)';
-    const lightShadow = props.theme?.shadows?.sm || '0 2px 4px rgba(0, 0, 0, 0.1)';
+    const isDark = props.currentTheme === "dark";
+    const darkShadow = props.theme?.shadows?.lg || "0 10px 25px rgba(0, 0, 0, 0.3)";
+    const lightShadow = props.theme?.shadows?.sm || "0 2px 4px rgba(0, 0, 0, 0.1)";
     return isDark ? darkShadow : lightShadow;
   }};
-  transition: ${(props) => props.theme?.transitions?.normal || '0.3s ease'};
-  
+  transition: ${(props) => props.theme?.transitions?.normal || "0.3s ease"};
+
   &:hover {
     transform: translateY(-2px);
-    box-shadow: ${(props) => props.theme?.shadows?.lg || '0 10px 25px rgba(0, 0, 0, 0.15)'};
+    box-shadow: ${(props) => props.theme?.shadows?.lg || "0 10px 25px rgba(0, 0, 0, 0.15)"};
   }
 `;
 
 function CardComponent() {
   const { theme, currentTheme } = useTheme();
-  
+
   return (
-    <AdaptiveCard 
-      theme={theme()} 
+    <AdaptiveCard
+      theme={theme()}
       currentTheme={currentTheme()}
     >
       Card content with adaptive theming
     </AdaptiveCard>
-  );
-}
-```
-```
-
----
-
-## 🛠️ Manual Setup (If Needed)
-
-If you need to set up themes and global styles manually, here's how:
-
-### Step 1: Create Global Styles
-
-```css
-/* src/styles/global.css */
-
-/* Modern CSS Reset */
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  line-height: 1.6;
-  color: var(--text-color);
-  background-color: var(--bg-color);
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-/* CSS Variables for theming */
-:root {
-  --primary: #3b82f6;
-  --secondary: #64748b;
-  --background: #ffffff;
-  --surface: #f8fafc;
-  --text: #1e293b;
-  --text-secondary: #64748b;
-  --border: #e2e8f0;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-}
-
-[data-theme="dark"] {
-  --primary: #60a5fa;
-  --secondary: #94a3b8;
-  --background: #0f172a;
-  --surface: #1e293b;
-  --text: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border: #334155;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --error: #f87171;
-}
-```
-
-### Step 2: Create Theme System
-
-```typescript
-// src/styles/theme.ts
-import { createSignal } from 'solid-js';
-
-export interface Theme {
-  name: string;
-  colors: {
-    primary: string;
-    secondary: string;
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    border: string;
-    success: string;
-    warning: string;
-    error: string;
-  };
-  typography: {
-    fontFamily: string;
-    fontSizes: {
-      xs: string;
-      sm: string;
-      base: string;
-      lg: string;
-      xl: string;
-      '2xl': string;
-    };
-    fontWeights: {
-      normal: number;
-      medium: number;
-      semibold: number;
-      bold: number;
-    };
-    lineHeights: {
-      tight: number;
-      normal: number;
-      relaxed: number;
-    };
-  };
-  spacing: {
-    xs: string;
-    sm: string;
-    md: string;
-    lg: string;
-    xl: string;
-  };
-  borderRadius: {
-    sm: string;
-    md: string;
-    lg: string;
-    full: string;
-  };
-  shadows: {
-    sm: string;
-    md: string;
-    lg: string;
-  };
-  transitions: {
-    fast: string;
-    normal: string;
-    slow: string;
-  };
-}
-
-export const lightTheme: Theme = {
-  name: 'light',
-  colors: {
-    primary: '#3b82f6',
-    secondary: '#64748b',
-    background: '#ffffff',
-    surface: '#f8fafc',
-    text: '#1e293b',
-    textSecondary: '#64748b',
-    border: '#e2e8f0',
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444',
-  },
-  typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    fontSizes: {
-      xs: '0.75rem',
-      sm: '0.875rem',
-      base: '1rem',
-      lg: '1.125rem',
-      xl: '1.25rem',
-      '2xl': '1.5rem',
-    },
-    fontWeights: {
-      normal: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700,
-    },
-    lineHeights: {
-      tight: 1.25,
-      normal: 1.5,
-      relaxed: 1.75,
-    },
-  },
-  spacing: {
-    xs: '0.5rem',
-    sm: '0.75rem',
-    md: '1rem',
-    lg: '1.5rem',
-    xl: '2rem',
-  },
-  borderRadius: {
-    sm: '0.25rem',
-    md: '0.5rem',
-    lg: '0.75rem',
-    full: '9999px',
-  },
-  shadows: {
-    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-  },
-  transitions: {
-    fast: 'all 0.15s ease',
-    normal: 'all 0.3s ease',
-    slow: 'all 0.5s ease',
-  },
-};
-
-export const darkTheme: Theme = {
-  ...lightTheme,
-  name: 'dark',
-  colors: {
-    primary: '#60a5fa',
-    secondary: '#94a3b8',
-    background: '#0f172a',
-    surface: '#1e293b',
-    text: '#f1f5f9',
-    textSecondary: '#94a3b8',
-    border: '#334155',
-    success: '#34d399',
-    warning: '#fbbf24',
-    error: '#f87171',
-  },
-};
-
-// Reactive theme state
-export const [currentTheme, setCurrentTheme] = createSignal<'light' | 'dark'>(
-  (typeof window !== 'undefined' && localStorage.getItem('theme') as 'light' | 'dark') || 'light'
-);
-
-export const theme = () => currentTheme() === 'dark' ? darkTheme : lightTheme;
-
-// Toggle theme function
-export const toggleTheme = () => {
-  const newTheme = currentTheme() === 'light' ? 'dark' : 'light';
-  setCurrentTheme(newTheme);
-  
-  if (typeof document !== 'undefined') {
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-  }
-};
-
-// Initialize theme on load
-if (typeof window !== 'undefined') {
-  const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
-  if (savedTheme) {
-    setCurrentTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }
-}
-```
-
-### Step 3: Create ThemeProvider
-
-```tsx
-// src/components/ThemeProvider.tsx
-import { createContext, useContext, JSX, ParentComponent } from 'solid-js';
-import { theme, currentTheme, toggleTheme, type Theme } from '../styles/theme';
-
-export interface ThemeContextType {
-  theme: () => Theme;
-  currentTheme: () => 'light' | 'dark';
-  toggleTheme: () => void;
-}
-
-const ThemeContext = createContext<ThemeContextType>();
-
-export const ThemeProvider: ParentComponent = (props) => {
-  const contextValue: ThemeContextType = {
-    theme,
-    currentTheme,
-    toggleTheme,
-  };
-
-  return (
-    <ThemeContext.Provider value={contextValue}>
-      {props.children}
-    </ThemeContext.Provider>
-  );
-};
-
-export function useTheme(): ThemeContextType {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-}
-
-// Example themed button component
-export const ThemedButton = (props: {
-  children: JSX.Element;
-  variant?: 'primary' | 'secondary';
-  size?: 'sm' | 'md' | 'lg';
-  onClick?: () => void;
-}) => {
-  const baseStyles = {
-    'font-family': 'inherit',
-    border: 'none',
-    cursor: 'pointer',
-    'border-radius': theme().borderRadius.md,
-    transition: theme().transitions.fast,
-    'font-weight': theme().typography.fontWeights.medium,
-  };
-  
-  const variantStyles = {
-    primary: {
-      'background-color': theme().colors.primary,
-      color: 'white',
-      '&:hover': {
-        'background-color': theme().colors.primaryDark,
-      },
-    },
-    secondary: {
-      'background-color': theme().colors.surface,
-      color: theme().colors.text,
-      border: \`1px solid \${theme().colors.border}\`,
-      '&:hover': {
-        'background-color': theme().colors.border,
-      },
-    },
-  };
-  
-  const sizeStyles = {
-    sm: {
-      padding: \`\${theme().spacing.xs} \${theme().spacing.sm}\`,
-      'font-size': theme().typography.fontSizes.sm,
-    },
-    md: {
-      padding: \`\${theme().spacing.sm} \${theme().spacing.md}\`,
-      'font-size': theme().typography.fontSizes.base,
-    },
-    lg: {
-      padding: \`\${theme().spacing.md} \${theme().spacing.lg}\`,
-      'font-size': theme().typography.fontSizes.lg,
-    },
-  };
-  
-  return (
-    <button
-      style={{
-        ...baseStyles,
-        ...variantStyles[props.variant || 'primary'],
-        ...sizeStyles[props.size || 'md'],
-      }}
-      onClick={props.onClick}
-    >
-      {props.children}
-    </button>
-  );
-};
-```
-
-### Step 4: Update Entry Files
-
-**For Solid.js (`src/index.tsx`):**
-
-```tsx
-import './styles/global.css';
-import { render } from 'solid-js/web';
-import { ThemeProvider } from './components/ThemeProvider';
-import App from './App'; // Your existing app component
-
-render(() => (
-  <ThemeProvider>
-    <App />
-  </ThemeProvider>
-), document.getElementById('root')!);
-```
-
-**For SolidStart (`src/app.tsx` or `src/root.tsx`):**
-
-```tsx
-import './styles/global.css';
-import { ThemeProvider } from './components/ThemeProvider';
-// Your other imports...
-
-export default function App() {
-  return (
-    <ThemeProvider>
-      {/* Your existing app content */}
-    </ThemeProvider>
   );
 }
 ```
@@ -641,7 +281,7 @@ export default function App() {
 
 ## Core Concepts
 
-### 1. **Styled Components**
+### 1. **Solid Styles**
 
 - Write CSS in JS, but it's extracted at build time.
 - Props can control styles: `props => ...`.
@@ -1037,7 +677,7 @@ import { animated, useSpring } from "solid-styles/animation";
 
 ## Advanced/Custom Usage (Optional)
 
-For building custom solutions outside the main styled-components API:
+For building custom solutions outside the main solid-styles API:
 
 ### Advanced Gradient Utilities
 
@@ -1143,6 +783,331 @@ graph TD
 
 ## Troubleshooting & FAQ
 
+<details>
+<summary><strong>❓ How do you set up global styles manually?</strong></summary>
+
+### Step-by-Step Global Styles Setup
+
+**Step 1: Create the global CSS file**
+
+```bash
+mkdir -p src/styles
+touch src/styles/global.css
+```
+
+**Step 2: Add modern CSS reset and variables**
+
+```css
+/* src/styles/global.css */
+
+/* Modern CSS Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* CSS Variables for theming */
+:root {
+  --primary: #3b82f6;
+  --secondary: #64748b;
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
+[data-theme="dark"] {
+  --primary: #60a5fa;
+  --secondary: #94a3b8;
+  --background: #0f172a;
+  --surface: #1e293b;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+}
+```
+
+**Step 3: Import in your entry file**
+
+```tsx
+// src/index.tsx (Solid.js) or src/app.tsx (SolidStart)
+import "./styles/global.css";
+
+// ... rest of your app
+```
+
+**Step 4: Configure Vite (if needed)**
+
+```ts
+// vite.config.ts
+export default defineConfig({
+  css: {
+    postcss: {
+      plugins: [autoprefixer()],
+    },
+  },
+});
+```
+
+</details>
+
+<details>
+<summary><strong>🎨 How do you set up themes manually?</strong></summary>
+
+### Step-by-Step Theme System Setup
+
+**Step 1: Create theme types and configuration**
+
+```tsx
+// src/styles/theme.ts
+import { createSignal } from "solid-js";
+
+export interface Theme {
+  name: string;
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    surface: string;
+    text: string;
+    textSecondary: string;
+    border: string;
+    success: string;
+    warning: string;
+    error: string;
+  };
+  typography: {
+    fontFamily: string;
+    fontSizes: Record<string, string>;
+    fontWeights: Record<string, number>;
+    lineHeights: Record<string, number>;
+  };
+  spacing: Record<string, string>;
+  borderRadius: Record<string, string>;
+  shadows: Record<string, string>;
+  transitions: Record<string, string>;
+}
+
+// Theme definitions
+export const lightTheme: Theme = {
+  name: "light",
+  colors: {
+    primary: "#3b82f6",
+    secondary: "#64748b",
+    background: "#ffffff",
+    surface: "#f8fafc",
+    text: "#1e293b",
+    textSecondary: "#64748b",
+    border: "#e2e8f0",
+    success: "#10b981",
+    warning: "#f59e0b",
+    error: "#ef4444",
+  },
+  typography: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    fontSizes: {
+      xs: "0.75rem",
+      sm: "0.875rem",
+      base: "1rem",
+      lg: "1.125rem",
+      xl: "1.25rem",
+      "2xl": "1.5rem",
+    },
+    fontWeights: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700,
+    },
+    lineHeights: {
+      tight: 1.25,
+      normal: 1.5,
+      relaxed: 1.75,
+    },
+  },
+  spacing: {
+    xs: "0.25rem",
+    sm: "0.5rem",
+    md: "1rem",
+    lg: "1.5rem",
+    xl: "3rem",
+  },
+  borderRadius: {
+    sm: "0.25rem",
+    md: "0.375rem",
+    lg: "0.5rem",
+    xl: "0.75rem",
+  },
+  shadows: {
+    sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    md: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+    lg: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+  },
+  transitions: {
+    fast: "0.15s ease",
+    normal: "0.25s ease",
+    slow: "0.35s ease",
+  },
+};
+
+// Create dark theme
+export const darkTheme: Theme = {
+  ...lightTheme,
+  name: "dark",
+  colors: {
+    primary: "#60a5fa",
+    secondary: "#94a3b8",
+    background: "#0f172a",
+    surface: "#1e293b",
+    text: "#f1f5f9",
+    textSecondary: "#94a3b8",
+    border: "#334155",
+    success: "#34d399",
+    warning: "#fbbf24",
+    error: "#f87171",
+  },
+};
+
+// Theme signals
+export const [currentTheme, setCurrentTheme] = createSignal<"light" | "dark">(
+  (localStorage?.getItem("theme") as "light" | "dark") || "light"
+);
+
+export const theme = () => (currentTheme() === "dark" ? darkTheme : lightTheme);
+
+export const toggleTheme = () => {
+  const newTheme = currentTheme() === "light" ? "dark" : "light";
+  setCurrentTheme(newTheme);
+  localStorage?.setItem("theme", newTheme);
+  document.documentElement.setAttribute("data-theme", newTheme);
+};
+```
+
+**Step 2: Create ThemeProvider component**
+
+```tsx
+// src/components/ThemeProvider.tsx
+import { createContext, useContext, ParentComponent, onMount } from "solid-js";
+import { theme, currentTheme, toggleTheme, Theme } from "../styles/theme";
+
+interface ThemeContextType {
+  theme: () => Theme;
+  currentTheme: () => "light" | "dark";
+  toggleTheme: () => void;
+}
+
+const ThemeContext = createContext<ThemeContextType>();
+
+export const ThemeProvider: ParentComponent = (props) => {
+  onMount(() => {
+    // Set initial theme attribute
+    document.documentElement.setAttribute("data-theme", currentTheme());
+  });
+
+  const value: ThemeContextType = {
+    theme,
+    currentTheme,
+    toggleTheme,
+  };
+
+  return <ThemeContext.Provider value={value}>{props.children}</ThemeContext.Provider>;
+};
+
+export function useTheme(): ThemeContextType {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error("useTheme must be used within a ThemeProvider");
+  }
+  return context;
+}
+```
+
+**Step 3: Wrap your app with ThemeProvider**
+
+```tsx
+// src/index.tsx (Solid.js)
+import "./styles/global.css";
+import { ThemeProvider } from "./components/ThemeProvider";
+
+function App() {
+  return <ThemeProvider>{/* Your app components */}</ThemeProvider>;
+}
+
+// For SolidStart (src/app.tsx)
+export default function App() {
+  return (
+    <Router
+      root={(props) => (
+        <ThemeProvider>
+          <MetaProvider>
+            <Title>SolidStart - Basic</Title>
+            <Suspense>{props.children}</Suspense>
+          </MetaProvider>
+        </ThemeProvider>
+      )}
+    >
+      <FileRoutes />
+    </Router>
+  );
+}
+```
+
+**Step 4: Use themes in solid styles**
+
+```tsx
+// Example usage
+import { styled } from "solid-styles";
+import { useTheme } from "./components/ThemeProvider";
+
+const ThemedButton = styled.button`
+  background-color: ${(props) => props.theme?.colors?.primary || "#3b82f6"};
+  color: ${(props) => props.theme?.colors?.text || "#ffffff"};
+  padding: ${(props) => props.theme?.spacing?.md || "1rem"};
+  border-radius: ${(props) => props.theme?.borderRadius?.md || "0.375rem"};
+  transition: ${(props) => props.theme?.transitions?.fast || "0.15s ease"};
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+`;
+
+function MyComponent() {
+  const { theme: currentTheme, toggleTheme } = useTheme();
+
+  return (
+    <ThemedButton
+      theme={currentTheme()}
+      onClick={toggleTheme}
+    >
+      Toggle Theme
+    </ThemedButton>
+  );
+}
+```
+
+</details>
+
 **Q: My styles don't update on prop change?**
 
 - A: Only static prop patterns are extracted. For dynamic styles, use runtime props or animation APIs.
@@ -1207,4 +1172,3 @@ sequenceDiagram
 **Made with ❤️ for the SolidJS community.**
 
 ---
-
