@@ -1,14 +1,54 @@
 #!/usr/bin/env node
-import { promises as fs } from 'node:fs';
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import readline from 'node:readline/promises';
+
+import { dirname, resolve } from 'node:path';
+
 import { exec } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { promises as fs } from 'node:fs';
 import { promisify } from 'node:util';
+import readline from 'node:readline/promises';
 
 const execAsync = promisify(exec);
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const rootDir = resolve(__dirname, '..');
+
+// Detect if we're running as a postinstall hook and find the correct project root
+async function findProjectRoot() {
+  // If running directly from the solid-styles package
+  const directRoot = resolve(__dirname, '..');
+  
+  // Check if we're running as a postinstall hook (inside node_modules)
+  const isPostinstall = __dirname.includes('node_modules');
+  
+  if (isPostinstall) {
+    // We're in node_modules/solid-styles/scripts, need to find the actual project root
+    let currentDir = __dirname;
+    
+    // Traverse upward until we find the project root (outside node_modules)
+    while (currentDir.includes('node_modules')) {
+      currentDir = dirname(currentDir);
+    }
+    
+    // Go up one more level to get to the actual project root
+    const projectRoot = dirname(currentDir);
+    
+    // Verify this is a valid project by checking for package.json
+    const packageJsonPath = resolve(projectRoot, 'package.json');
+    if (await fileExists(packageJsonPath)) {
+      return projectRoot;
+    }
+    
+    // Fallback: try the parent of node_modules
+    const fallbackRoot = dirname(currentDir);
+    const fallbackPackageJson = resolve(fallbackRoot, 'package.json');
+    if (await fileExists(fallbackPackageJson)) {
+      return fallbackRoot;
+    }
+  }
+  
+  return directRoot;
+}
+
+const rootDir = await findProjectRoot();
 
 // Colors for terminal output
 const colors = {
@@ -916,7 +956,19 @@ async function main() {
     const packageJsonPath = resolve(rootDir, 'package.json');
     if (!(await fileExists(packageJsonPath))) {
       log('❌ Error: package.json not found. Please run this script from the project root.', 'red');
+      log(`🔍 Looking in: ${rootDir}`, 'yellow');
+      log('💡 If you installed solid-styles as a dependency, try running: npx solid-styles setup', 'cyan');
       process.exit(1);
+    }
+    
+    // Check if we're in a solid-styles development environment
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, 'utf-8'));
+    const isSolidStylesDev = packageJson.name === 'solid-styles';
+    
+    if (isSolidStylesDev) {
+      log('🛠️  Running in solid-styles development mode', 'yellow');
+    } else {
+      log(`🎯 Setting up solid-styles for: ${packageJson.name}`, 'cyan');
     }
     
     const framework = await promptUser();
@@ -982,7 +1034,7 @@ async function main() {
   }
 }
 
-// Run if called directly
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  main();
-}
+main().catch((error) => {
+  console.error('Setup failed:', error);
+  process.exit(1);
+});
