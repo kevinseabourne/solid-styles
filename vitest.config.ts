@@ -31,6 +31,16 @@ export default defineConfig({
       },
       isolate: true,
       fileParallelism: false, // Better for Solid Styles tests
+      // Playwright configuration to prevent route conflicts
+      providerOptions: {
+        launch: {
+          args: ['--disable-web-security', '--disable-features=VizDisplayCompositor'],
+        },
+        context: {
+          // Prevent route handling conflicts
+          ignoreHTTPSErrors: true,
+        },
+      },
     },
     globals: true,
     setupFiles: ["./tests/setup.ts"],

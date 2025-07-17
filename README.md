@@ -16,12 +16,13 @@
 5. [API Reference (With Examples)](#api-reference-with-examples)
 6. [Advanced Animation System (Comprehensive Guide)](#advanced-animation-system-comprehensive-guide)
 7. [Advanced Patterns](#advanced-patterns)
-8. [SSR & Hydration](#ssr--hydration)
-9. [Performance & Bundle Size](#performance--bundle-size)
-10. [Troubleshooting & FAQ](#troubleshooting--faq)
-11. [Visual Guides & Diagrams](#visual-guides--diagrams)
-12. [Best Practices & Memory Tricks](#best-practices--memory-tricks)
-13. [Contributing](#contributing)
+8. [Theme System](#theme-system)
+9. [SSR & Hydration](#ssr--hydration)
+10. [Performance & Bundle Size](#performance--bundle-size)
+11. [Troubleshooting & FAQ](#troubleshooting--faq)
+12. [Visual Guides & Diagrams](#visual-guides--diagrams)
+13. [Best Practices & Memory Tricks](#best-practices--memory-tricks)
+14. [Contributing](#contributing)
 
 ---
 
@@ -361,14 +362,32 @@ const theme = { colors: { primary: "#007bff" } };
 </ThemeProvider>;
 ```
 
-### **6. animated**
+### **6. Spring Animations**
 
 ```tsx
-import { animated } from "solid-styles/animation";
-const AnimatedDiv = animated("div");
+// No verbose animated() wrapper needed!
+// Just use animate props directly on styled components
+
+const AnimatedBox = styled.div`
+  padding: 2rem;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 8px;
+`;
+
+// Use animation props directly - automatic detection!
+<AnimatedBox
+  animate={{
+    from: { opacity: 0, y: 20 },
+    to: { opacity: 1, y: 0 },
+    config: { stiffness: 100, damping: 15 },
+    when: "mount",
+  }}
+>
+  This content fades in and moves up automatically!
+</AnimatedBox>;
 ```
 
-### **7. useSpring**
+### **7. Advanced Spring Control**
 
 ```tsx
 import { useSpring } from "solid-styles/animation";
@@ -395,24 +414,225 @@ The advanced animation system provides a comprehensive, declarative API for crea
 
 ### **Basic Usage Examples**
 
-#### Using `animated` HOC
+#### **🚀 Streamlined Animation Syntax (No Wrappers!)**
 
-Wrap any component or HTML element with the `animated` HOC to add animation capabilities:
+**Just use animation props directly on any styled component** - automatic detection handles everything:
 
 ```tsx
-import { animated } from "solid-styles/animation";
+// Create regular styled components
+const Button = styled.button`
+  padding: 12px 24px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+`;
 
-// Apply animation to a div
-<animated("div")
+const Card = styled.div`
+  padding: 2rem;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+`;
+
+// Use animation props directly - automatic detection!
+<Button
+  animate={{
+    from: { scale: 0.95 },
+    to: { scale: 1 },
+    when: "mount"
+  }}
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.98 }}
+>
+  Click me!
+</Button>
+
+<Card
   animate={{
     from: { opacity: 0, y: 20 },
     to: { opacity: 1, y: 0 },
-    config: { stiffness: 100, damping: 15 },
+    config: { stiffness: 120, damping: 20 },
     when: "mount"
   }}
 >
   This content will fade in and move up when mounted
-</animated("div")>
+</Card>
+
+// Usage with styled components
+const Box = styled("div")`
+  padding: 2rem;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 8px;
+`;
+
+const AnimatedBox = Box;
+
+<AnimatedBox
+  animate={{
+    from: { opacity: 0, scale: 0.8 },
+    to: { opacity: 1, scale: 1 },
+    config: { stiffness: 150, damping: 15 },
+    when: "mount"
+  }}
+>
+  Interactive Content
+</AnimatedBox>
+```
+
+#### **🎨 Rich Animation Props**
+
+```tsx
+<StyledComponent
+  // Mount animation
+  animate={{
+    from: { opacity: 0, y: 20 },
+    to: { opacity: 1, y: 0 },
+    config: { stiffness: 120, damping: 20 },
+  }}
+  // Interaction animations
+  whileHover={{ scale: 1.05, brightness: 1.1 }}
+  whileTap={{ scale: 0.98 }}
+  whileFocus={{ outline: "2px solid #007bff" }}
+  // Scroll animations
+  whileInView={{
+    rotateY: [0, 180, 360],
+    transition: { duration: 2000 },
+  }}
+  // Gesture support
+  drag="x"
+  dragConstraints={{ left: -100, right: 100 }}
+>
+  Fully interactive content!
+</StyledComponent>
+```
+
+#### **🎯 All HTML Elements Support Animations**
+
+**Every styled component automatically supports animations** - no special imports needed:
+
+```tsx
+// Create any styled component
+const Button = styled.button`
+  padding: 12px 24px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+`;
+
+const Heading = styled.h1`
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+`;
+
+const Image = styled.img`
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+`;
+
+// Use animation props directly on ANY styled component
+<Button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
+  Interactive Button
+</Button>
+
+<Heading animate={{ from: { y: -20 }, to: { y: 0 }, when: "mount" }}>
+  Animated Title
+</Heading>
+
+<Image whileHover={{ scale: 1.1, rotate: 2 }} drag="x">
+  Draggable Image
+</Image>
+```
+
+#### Advanced Hover Animations (Special Syntax)
+
+```tsx
+import { springPresets } from "solid-styles/animation";
+
+// Hover animations use special animate:hover prop
+<AnimatedButton
+  animate={{
+    from: { opacity: 0, scale: 0.9 },
+    to: { opacity: 1, scale: 1 },
+    ...springPresets.pop, // Built-in spring presets
+  }}
+  animate:hover={{
+    from: { scale: 1, translateY: 0 },
+    to: { scale: 1.05, translateY: -5 },
+    when: () => hoverStates().button, // Function-based conditions
+    reverseOnExit: true, // Reverses animation when hover ends
+    ...springPresets.snappy,
+  }}
+  onMouseEnter={() => setHover("button", true)}
+  onMouseLeave={() => setHover("button", false)}
+>
+  Hover me!
+</AnimatedButton>;
+```
+
+#### Spring Presets
+
+Use built-in spring configurations for common animation feels:
+
+```tsx
+import { springPresets } from "solid-styles/animation";
+
+// Available presets:
+springPresets.gentle; // Soft, slow animations
+springPresets.smooth; // Balanced, natural feel
+springPresets.snappy; // Quick, responsive
+springPresets.elastic; // Bouncy, playful
+springPresets.pop; // Sharp, attention-grabbing
+springPresets.stiff; // Rigid, immediate
+springPresets.slow; // Very gradual
+springPresets.molasses; // Extremely slow
+
+// Usage with any styled component
+const Card = styled.div`
+  padding: 2rem;
+  background: #f0f9ff;
+  border-radius: 12px;
+`;
+
+<Card
+  animate={{
+    from: { opacity: 0, scale: 0.8 },
+    to: { opacity: 1, scale: 1 },
+    ...springPresets.elastic, // Spread preset config
+  }}
+>
+  Bouncy animation!
+</Card>;
+```
+
+#### Conditional Animations
+
+```tsx
+const [viewportVisible, setViewportVisible] = createSignal(false);
+
+const Banner = styled.div`
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+`;
+
+<Banner
+  animate={{
+    from: { opacity: 0, translateY: 30 },
+    to: {
+      // Use functions for conditional values
+      opacity: viewportVisible() ? 1 : 0,
+      translateY: viewportVisible() ? 0 : 30,
+    },
+    ...springPresets.smooth,
+  }}
+>
+  Appears when viewport condition is met
+</Banner>;
 ```
 
 ### **Advanced Animation Configuration**
@@ -577,7 +797,7 @@ type AnimationTrigger =
   ]}
 >
   Interactive Content
-</Box>
+
 ```
 
 #### Keyframe Animations
@@ -669,8 +889,25 @@ import { styled, css, createGlobalStyles } from "solid-styles";
 Physics-based animations with **built-in spring physics**. Everything included!
 
 ```tsx
-import { animated, useSpring } from "solid-styles/animation";
-// Spring physics built-in 🌊
+// Spring physics built-in with every styled component! 🌊
+const PhysicsCard = styled.div`
+  width: 200px;
+  height: 150px;
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  border-radius: 12px;
+`;
+
+// Just add animation props - physics included!
+<PhysicsCard
+  animate={{
+    from: { x: -100, rotateZ: -10 },
+    to: { x: 0, rotateZ: 0 },
+    config: { stiffness: 150, damping: 12 },
+  }}
+  whileHover={{ scale: 1.05, rotateZ: 2 }}
+>
+  Physics-powered interactions!
+</PhysicsCard>;
 ```
 
 ---
@@ -764,117 +1001,41 @@ That's it. The build process handles everything else. You get all the benefits o
 
 ---
 
-## Performance & Bundle Size
+## Theme System
 
-- **Core bundle**: ~21KB min+br
-- **With animation**: ~23KB min+br
-- **No runtime CSS-in-JS**: All styles are static, tree-shakeable.
-- **Lightning CSS**: 50-100x faster build times, 90% less runtime overhead.
+Solid Styles includes a comprehensive theme system that integrates seamlessly with SolidJS's reactive system, providing type-safe theming with automatic theme switching and SSR support.
 
-**Chart: Bundle Size Comparison**
-
-```mermaid
-graph TD
-  A["styled-components (classic)"] -->|"~40KB+runtime"| B["Your App"]
-  C["solid-styles"] -->|"~21KB static"| B
-```
-
----
-
-## Troubleshooting & FAQ
-
-<details>
-<summary><strong>❓ How do you set up global styles manually?</strong></summary>
-
-### Step-by-Step Global Styles Setup
-
-**Step 1: Create the global CSS file**
-
-```bash
-mkdir -p src/styles
-touch src/styles/global.css
-```
-
-**Step 2: Add modern CSS reset and variables**
-
-```css
-/* src/styles/global.css */
-
-/* Modern CSS Reset */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.6;
-  color: var(--text-color);
-  background-color: var(--bg-color);
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
-}
-
-/* CSS Variables for theming */
-:root {
-  --primary: #3b82f6;
-  --secondary: #64748b;
-  --background: #ffffff;
-  --surface: #f8fafc;
-  --text: #1e293b;
-  --text-secondary: #64748b;
-  --border: #e2e8f0;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-}
-
-[data-theme="dark"] {
-  --primary: #60a5fa;
-  --secondary: #94a3b8;
-  --background: #0f172a;
-  --surface: #1e293b;
-  --text: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border: #334155;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --error: #f87171;
-}
-```
-
-**Step 3: Import in your entry file**
+### **Quick Theme Setup**
 
 ```tsx
-// src/index.tsx (Solid.js) or src/app.tsx (SolidStart)
-import "./styles/global.css";
+import { styled, ThemeProvider } from "solid-styles";
 
-// ... rest of your app
+// Define your theme
+const theme = {
+  colors: { primary: "#3b82f6", background: "#ffffff" },
+  spacing: { md: "1rem" },
+};
+
+// Use in styled components
+const ThemedButton = styled.button`
+  background: ${props => props.theme.colors.primary};
+  padding: ${props => props.theme.spacing.md};
+`;
+
+// Wrap your app
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <ThemedButton>Themed Button</ThemedButton>
+    </ThemeProvider>
+  );
+}
 ```
 
-**Step 4: Configure Vite (if needed)**
-
-```ts
-// vite.config.ts
-export default defineConfig({
-  css: {
-    postcss: {
-      plugins: [autoprefixer()],
-    },
-  },
-});
-```
-
-</details>
+### **Advanced Theme Configuration**
 
 <details>
-<summary><strong>🎨 How do you set up themes manually?</strong></summary>
-
-### Step-by-Step Theme System Setup
+<summary><strong>🎨 Complete Theme Setup Guide</strong></summary>
 
 **Step 1: Create theme types and configuration**
 
@@ -1072,7 +1233,7 @@ export default function App() {
 }
 ```
 
-**Step 4: Use themes in solid styles**
+**Step 4: Use themes in styled components**
 
 ```tsx
 // Example usage
@@ -1108,21 +1269,171 @@ function MyComponent() {
 
 </details>
 
-**Q: My styles don't update on prop change?**
+### **Theme Features**
 
-- A: Only static prop patterns are extracted. For dynamic styles, use runtime props or animation APIs.
+- 🎨 **Type-safe themes** with full TypeScript support
+- 🌓 **Automatic theme switching** with localStorage persistence
+- 🔄 **SSR compatible** with no hydration mismatches
+- ⚡ **Reactive** theme updates using SolidJS signals
+- 🎯 **CSS variable integration** for optimal performance
+- 📱 **System theme detection** with prefers-color-scheme support
 
-**Q: Animation doesn't run?**
+---
 
-- A: Check your `when` trigger and ensure you're using the correct hook/component.
+## Performance & Bundle Size
 
-**Q: SSR hydration mismatch?**
+### **Modular Bundle Sizes**
 
-- A: Make sure your build process includes Lightning CSS and you're not using dynamic runtime-only props.
+- **Core Module**: ~100KB (styled, css, createGlobalStyles + Lightning CSS optimization)
+- **Animation Module**: ~388KB (includes complete spring physics engine)
+- **Lite Version**: ~21KB (zero-runtime, build-time only)
+- **Tree-shakeable**: Only import what you use
+- **No runtime CSS-in-JS**: All styles extracted at build time
+- **Lightning CSS**: 50-100x faster build times, 90% less runtime overhead
 
-**Q: How do I debug animations?**
+### **Bundle Size Comparison**
 
-- A: Use the `AnimationDebugger` from `animation/debug-tools.tsx` for live state inspection.
+```mermaid
+graph TD
+  A["styled-components"] -->|"~40KB + runtime overhead"| D["Your App"]
+  B["solid-styles (core)"] -->|"~100KB static"| D
+  C["solid-styles (lite)"] -->|"~21KB zero-runtime"| D
+  E["solid-styles (full)"] -->|"~388KB with animations"| D
+```
+
+### **Performance Benefits**
+
+- ⚡ **Zero runtime overhead**: All CSS extracted at build time
+- 🎯 **Tree-shakeable**: Import only the modules you need
+- 🚀 **Lightning CSS**: Faster builds, smaller bundles
+- 📱 **Mobile optimized**: Minimal JavaScript on client
+- 🔄 **SSR ready**: No hydration mismatches
+
+---
+
+## Troubleshooting & FAQ
+
+<details>
+<summary><strong>❓ How do you set up global styles manually?</strong></summary>
+
+### Step-by-Step Global Styles Setup
+
+**Step 1: Create the global CSS file**
+
+```bash
+mkdir -p src/styles
+touch src/styles/global.css
+```
+
+**Step 2: Add modern CSS reset and variables**
+
+```css
+/* src/styles/global.css */
+
+/* Modern CSS Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* CSS Variables for theming */
+:root {
+  --primary: #3b82f6;
+  --secondary: #64748b;
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --text: #1e293b;
+  --text-secondary: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+}
+
+[data-theme="dark"] {
+  --primary: #60a5fa;
+  --secondary: #94a3b8;
+  --background: #0f172a;
+  --surface: #1e293b;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --error: #f87171;
+}
+```
+
+**Step 3: Import in your entry file**
+
+```tsx
+// src/index.tsx (Solid.js) or src/app.tsx (SolidStart)
+import "./styles/global.css";
+
+// ... rest of your app
+```
+
+**Step 4: Configure Vite (if needed)**
+
+```ts
+// vite.config.ts
+export default defineConfig({
+  css: {
+    postcss: {
+      plugins: [autoprefixer()],
+    },
+  },
+});
+
+</details>
+
+<details>
+<summary><strong>🎨 How do I set up themes?</strong></summary>
+
+Themes are now covered in the dedicated [Theme System](#theme-system) section above. The theme system provides type-safe theming with SolidJS reactivity, automatic theme switching, and SSR support.
+
+</details>
+
+<details>
+<summary><strong>🔄 My styles don't update on prop change?</strong></summary>
+
+Only static prop patterns are extracted at build time. For dynamic styles, use runtime props or the animation APIs. Dynamic props that change frequently should use the runtime styling system.
+
+</details>
+
+<details>
+<summary><strong>🎨 Animation doesn't run?</strong></summary>
+
+Check your `when` trigger and ensure you're using the correct hook/component. Make sure the animation target element is properly rendered and the animation config is valid.
+
+</details>
+
+<details>
+<summary><strong>⚙️ SSR hydration mismatch?</strong></summary>
+
+Make sure your build process includes Lightning CSS and you're not using dynamic runtime-only props. All styles should be extractable at build time for SSR compatibility.
+
+</details>
+
+<details>
+<summary><strong>🔍 How do I debug animations?</strong></summary>
+
+Use the `AnimationDebugger` from `animation/debug-tools.tsx` for live state inspection. You can also enable debug mode to see animation state changes in the console.
+
+</details>
 
 ---
 

@@ -546,7 +546,7 @@ if (!isServer) {
     const safeArgs = args.map(safeArg);
 
     // Test-environment flag available throughout this function (server-side path)
-    const IS_TEST_ENV = typeof process !== "undefined" && process.env.NODE_ENV === "test";
+    const IS_TEST_ENV = process.env.NODE_ENV === "test";
 
     const globalString = strings.reduce(
       (acc, value, i) => acc + value + (i < safeArgs.length ? String(safeArgs[i]) : ""),
@@ -759,11 +759,184 @@ export { enhanced } from "./enhancedStyled";
 const cache = new Map<string, Component<any>>();
 
 /**
- * Function to check if a prop object contains animation-related properties
+ * Enhanced function to check if a prop object contains animation-related properties
  * This allows automatic detection of animation needs at runtime
+ * Supports all animation prop patterns including hover, focus, and interaction states
  */
 const hasAnimationProps = (props: any): boolean => {
-  return props && (props.animate !== undefined || props.motion !== undefined || props.transition !== undefined);
+  if (!props || typeof props !== 'object') return false;
+  
+  // Core animation properties
+  const coreAnimationProps = [
+    'animate',           // Core animation prop
+    'motion',           // Alternative naming
+    'transition',       // Spring configs
+    'initial',          // Initial state
+    'exit',             // Exit animations
+    'variants',         // Animation variants
+  ];
+  
+  // Interaction-based animation properties
+  const interactionProps = [
+    'animate:hover',     // Hover animations  
+    'animate:focus',     // Focus animations
+    'animate:click',     // Click animations
+    'animate:inView',    // Viewport animations
+    'whileHover',       // Framer Motion compatibility
+    'whileTap',         // Touch interactions
+    'whileFocus',       // Focus states
+    'whileInView',      // Intersection observer
+  ];
+  
+  // Combined detection
+  const allAnimationProps = [...coreAnimationProps, ...interactionProps];
+  
+  return allAnimationProps.some(prop => {
+    const value = props[prop];
+    return value !== undefined && value !== null && value !== false;
+  });
+};
+
+// =============================================================================
+// Automatic Animation System Integration
+// =============================================================================
+
+/**
+ * Cache for dynamically loaded animation system
+ * Ensures the animation system is only loaded once
+ */
+const animationSystemCache: { animated?: any } = {};
+let isAnimationSystemLoading = false;
+
+/**
+ * Dynamically load the animation system when needed
+ * Only loads when animation props are detected, improving performance
+ */
+const loadAnimationSystem = async () => {
+  if (animationSystemCache.animated) {
+    return animationSystemCache.animated;
+  }
+  
+  if (isAnimationSystemLoading) {
+    // Wait for existing load to complete
+    while (isAnimationSystemLoading && !animationSystemCache.animated) {
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+    return animationSystemCache.animated;
+  }
+  
+  try {
+    isAnimationSystemLoading = true;
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[SOLID-STYLES] Loading animation system...');
+    }
+    
+    // Dynamic import for code splitting
+    const { animated } = await import('../animation/animatedStyled');
+    animationSystemCache.animated = animated;
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[SOLID-STYLES] Animation system loaded successfully');
+    }
+    
+    return animated;
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[SOLID-STYLES] Failed to load animation system:', error);
+    }
+    return null;
+  } finally {
+    isAnimationSystemLoading = false;
+  }
+};
+
+
+
+/**
+ * Check if a component is already an animated component
+ * Prevents double-wrapping when both animated() HOC and animate prop are used
+ */
+const isAnimatedComponent = (component: any): boolean => {
+  return component && (
+    component.__isAnimatedComponent === true ||
+    component.displayName?.includes('Animated') ||
+    component.name?.includes('Animated')
+  );
+};
+
+/**
+ * Creates a base styled component without animation capabilities
+ * Used internally by both standard and animated styled components
+ */
+const createBaseStyledComponent = (tag: any, strings: TemplateStringsArray, args: CssArg[]) => {
+  // Generate a key for this styled component
+  const key = typeof tag === "string" ? tag + strings.join("").trim() : strings.join("").trim();
+  
+  // Check cache first
+  const cachedComponent = cache.get(key);
+  if (cachedComponent) {
+    return cachedComponent;
+  }
+  
+  // Create the base styled component
+  const BaseStyledComponent = (props: any) => {
+    // Split out the props that Solid Styles handles internally.
+    const [local, rest] = splitProps(props, ["as", "class", "className", "style", "ref"]);
+
+    // Determine the component to render. Use the `as` prop if it's provided, otherwise fall back to the original tag.
+    const componentToRender = local.as || tag;
+
+    // --- Class Name and Style Generation ---
+    // Only log in development mode, not in tests
+    if (process.env.NODE_ENV === "development") {
+      console.log("[LIGHTNING-CSS] Styled component rendering with props:", Object.keys(props));
+    }
+
+    let staticClassName: string | null = null;
+    try {
+      staticClassName = resolvePropsToClass(rest);
+      if (process.env.NODE_ENV === "development") {
+        console.log("[LIGHTNING-CSS] Static class resolved:", staticClassName);
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("[LIGHTNING-CSS] Error resolving static class:", error);
+      }
+    }
+
+    // Generate the template styles
+    const mergedCss = strings.reduce((result, string, index) => {
+      const arg = args[index];
+      return result + string + (arg !== undefined ? String(arg) : "");
+    }, "");
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("[LIGHTNING-CSS] Merged CSS:", mergedCss);
+    }
+
+    // Create the final className
+    const finalClassName = [staticClassName, local.class, local.className]
+      .filter(Boolean)
+      .join(" ");
+
+    // Create the final style object
+    const finalStyle = mergeProps(
+      { style: {} },
+      { style: local.style || {} }
+    ).style;
+
+    return createComponent(Dynamic, {
+      component: componentToRender,
+      ...rest,
+      class: finalClassName,
+      style: finalStyle,
+      ref: local.ref,
+    });
+  };
+  
+  // Cache the component
+  cache.set(key, BaseStyledComponent);
+  return BaseStyledComponent;
 };
 
 /**
@@ -783,7 +956,14 @@ function styled(tag: any) {
       return cachedComponent;
     }
 
+    // ======= CREATE STANDARD STYLED COMPONENT =======
+    // Always load animation system for potential future use
+    loadAnimationSystem();
+    
+    // ======= STANDARD STYLED COMPONENT =======
     const StyledComponent = (props: any) => {
+      
+      // ======= STANDARD STYLED COMPONENT PATH =======
       // Split out the props that Solid Styles handles internally.
       const [local, rest] = splitProps(props, ["as", "class", "className", "style", "ref"]);
 
