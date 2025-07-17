@@ -63,18 +63,67 @@
 
 ## Quick Start
 
+### Installation
+
 ```bash
-# Using pnpm (recommended)
-pnpm add solid-styles
-
-# Using npm
 npm install solid-styles
-
-# Using yarn
+# or
 yarn add solid-styles
+# or
+pnpm add solid-styles
+```
 
-# Using bun
-bun add solid-styles
+### Automatic Setup
+
+**The easiest way to get started** is with the automatic setup command:
+
+```bash
+npx solid-styles setup
+```
+
+**What it does:**
+- 🔍 **Auto-detects your project**: Solid.js vs SolidStart
+- 🔍 **Auto-detects your language**: JavaScript vs TypeScript
+- 🔍 **Auto-detects your bundler**: Vite vs Vinxi
+- 📁 **Creates theme files**: `theme.js` or `theme.ts` with proper typing
+- 🎨 **Creates global styles**: `index.css` or `app.css` (SolidStart)
+- 📥 **Injects imports**: Automatically adds theme imports to your entry file
+- ✅ **Zero configuration**: No prompts, no questions, just works
+
+### Setup Examples
+
+#### For JavaScript + Solid.js:
+```bash
+🔍 Detected: Solid.js project using vite
+✅ Theme file: ./src/theme.js → import { theme } from "./src/theme"
+✅ Global styles: ./src/index.css → import "./src/index.css"
+```
+
+#### For TypeScript + SolidStart:
+```bash
+🔍 Detected: SolidStart project using vinxi with TypeScript
+✅ Theme file: ./src/theme.ts → import { theme } from "./src/theme"
+✅ Global styles: ./src/app.css → import "./src/app.css"
+```
+
+### Package Manager Support
+
+Works with all package managers:
+
+```bash
+# npm
+npx solid-styles setup
+
+# pnpm
+pnpm dlx solid-styles setup
+# or
+node node_modules/solid-styles/scripts/setup.js
+
+# yarn
+yarn dlx solid-styles setup
+
+# bun
+bunx solid-styles setup
 ```
 
 ```tsx

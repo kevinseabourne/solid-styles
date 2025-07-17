@@ -1,6 +1,6 @@
 {
   "name": "solid-styles",
-  "version": "1.2.1",
+  "version": "1.4.0",
   "description": "Zero-runtime styled components for SolidJS with Lightning CSS optimization and spring animations. Production-ready CSS-in-JS with 100% test coverage.",
   "keywords": [
     "solidjs",
