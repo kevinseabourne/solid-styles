@@ -66,13 +66,14 @@
   },
   "files": [
     "dist",
+    "scripts",
     "README.md",
     "LICENSE"
   ],
   "sideEffects": false,
   "scripts": {
     "setup": "node scripts/setup.js",
-    "postinstall": "node scripts/setup.js || true",
+    "postinstall": "node scripts/auto-setup.js || true",
     "build": "mkdir -p dist && cp -r src animation utils lightning scripts dist/ && cp lightning-setup.ts README.md LICENSE dist/ 2>/dev/null || true",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "vitest",

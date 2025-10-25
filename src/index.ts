@@ -2,9 +2,6 @@
  * Styled Components for SolidJS with Lightning CSS Integration
  */
 
-// Auto-setup on first import (development only)
-import './auto-setup.js'
-
 import { Component, JSX, createComponent, mergeProps, splitProps, Accessor, onCleanup } from "solid-js";
 import { Dynamic, isServer } from "solid-js/web";
 import { measureStyleApplication } from "./performance";
