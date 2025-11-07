@@ -105,6 +105,11 @@ async function detectFramework(rootDir) {
     const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
     const typescript = await detectTypeScript(rootDir);
     
+    // Detect Astro + SolidJS
+    if (deps['astro'] && deps['@astrojs/solid-js']) {
+      return { framework: 'astro', bundler: 'vite', typescript };
+    }
+    
     // Detect SolidStart (uses Vinxi)
     if (deps['@solidjs/start'] || deps['solid-start']) {
       return { framework: 'solid-start', bundler: 'vinxi', typescript };
@@ -362,6 +367,181 @@ html, body {
   }
 }
 
+async function createAstroConfiguration(rootDir, bundler, typescript) {
+  log(`🚀 Setting up for Astro + SolidJS with ${bundler}...`, 'cyan');
+  
+  // Create theme file in src/components
+  const componentsDir = resolve(rootDir, 'src', 'components');
+  await fs.mkdir(componentsDir, { recursive: true });
+  
+  const themeExtension = typescript ? '.ts' : '.js';
+  const themeFile = resolve(componentsDir, `theme${themeExtension}`);
+  
+  if (!(await fileExists(themeFile))) {
+    const themeContent = typescript ? `export interface Theme {
+  colors: {
+    primary: string;
+    secondary: string;
+    background: string;
+    text: string;
+  };
+  fonts: {
+    body: string;
+    heading: string;
+  };
+  spacing: {
+    xs: string;
+    sm: string;
+    md: string;
+    lg: string;
+    xl: string;
+  };
+}
+
+export const theme: Theme = {
+  colors: {
+    primary: '#007acc',
+    secondary: '#333',
+    background: '#fff',
+    text: '#000'
+  },
+  fonts: {
+    body: 'system-ui, sans-serif',
+    heading: 'Georgia, serif'
+  },
+  spacing: {
+    xs: '0.25rem',
+    sm: '0.5rem',
+    md: '1rem',
+    lg: '1.5rem',
+    xl: '2rem'
+  }
+};
+` : `export const theme = {
+  colors: {
+    primary: '#007acc',
+    secondary: '#333',
+    background: '#fff',
+    text: '#000'
+  },
+  fonts: {
+    body: 'system-ui, sans-serif',
+    heading: 'Georgia, serif'
+  },
+  spacing: {
+    xs: '0.25rem',
+    sm: '0.5rem',
+    md: '1rem',
+    lg: '1.5rem',
+    xl: '2rem'
+  }
+};
+`;
+    
+    await fs.writeFile(themeFile, themeContent);
+    log(`✅ Created components/theme${themeExtension}`, 'green');
+  }
+  
+  // Create global styles
+  const stylesDir = resolve(rootDir, 'src', 'styles');
+  await fs.mkdir(stylesDir, { recursive: true });
+  
+  const globalCss = resolve(stylesDir, 'global.css');
+  if (!(await fileExists(globalCss))) {
+    const cssContent = `/* Astro + solid-styles global styles */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #ffffff;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+/* CSS variables for theme colors */
+:root {
+  --color-primary: #3b82f6;
+  --color-secondary: #64748b;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+`;
+    
+    await fs.writeFile(globalCss, cssContent);
+    log('✅ Created styles/global.css', 'green');
+  }
+  
+  // Update or create astro.config.mjs
+  await updateAstroConfig(rootDir, typescript);
+}
+
+async function updateAstroConfig(rootDir, typescript) {
+  const configFile = typescript ? 'astro.config.ts' : 'astro.config.mjs';
+  const configPath = resolve(rootDir, configFile);
+  
+  if (await fileExists(configPath)) {
+    try {
+      let config = await fs.readFile(configPath, 'utf-8');
+      
+      // Check if Lightning CSS plugin is already imported
+      if (config.includes('lightningCSSPlugin')) {
+        log('⚠️  Lightning CSS plugin already configured', 'yellow');
+        return;
+      }
+      
+      // Add import for Lightning CSS plugin
+      const importStatement = "import { lightningCSSPlugin } from 'solid-styles/lightning';\n";
+      
+      // Find the last import statement
+      const lines = config.split('\n');
+      let lastImportIndex = -1;
+      
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].trim().startsWith('import ')) {
+          lastImportIndex = i;
+        }
+      }
+      
+      if (lastImportIndex >= 0) {
+        lines.splice(lastImportIndex + 1, 0, importStatement);
+      } else {
+        lines.unshift(importStatement);
+      }
+      
+      // Add plugin to vite.plugins array
+      config = lines.join('\n');
+      
+      // Look for vite config
+      if (config.includes('vite:')) {
+        // Add to existing vite config
+        config = config.replace(
+          /(vite:\s*{[^}]*plugins:\s*\[)/,
+          '$1lightningCSSPlugin(), '
+        );
+      } else {
+        // Add new vite config
+        config = config.replace(
+          /(integrations:\s*\[[^\]]*\])/,
+          '$1,\n  vite: {\n    plugins: [lightningCSSPlugin()]\n  }'
+        );
+      }
+      
+      await fs.writeFile(configPath, config);
+      log(`✅ Updated ${configFile} with Lightning CSS plugin`, 'green');
+    } catch (error) {
+      log(`⚠️  Could not auto-update ${configFile}: ${error.message}`, 'yellow');
+      log('  Please manually add the Lightning CSS plugin to your Astro config', 'yellow');
+    }
+  }
+}
+
 async function saveConfiguration(framework, rootDir) {
   const configPath = resolve(rootDir, '.framework-config.json');
   const config = {
@@ -394,7 +574,9 @@ async function main() {
     
     // Detect framework
     const { framework, bundler, typescript } = await detectFramework(rootDir);
-    if (framework === 'solid-start') {
+    if (framework === 'astro') {
+      log(`🔍 Detected: Astro + SolidJS project using ${bundler}${typescript ? ' with TypeScript' : ''}`, 'blue');
+    } else if (framework === 'solid-start') {
       log(`🔍 Detected: SolidStart project using ${bundler}${typescript ? ' with TypeScript' : ''}`, 'blue');
     } else {
       log(`🔍 Detected: Solid.js project using ${bundler}${typescript ? ' with TypeScript' : ''}`, 'blue');
@@ -409,7 +591,9 @@ async function main() {
     }
     
     // Configure based on framework
-    if (framework === 'solid-start') {
+    if (framework === 'astro') {
+      await createAstroConfiguration(rootDir, bundler, typescript);
+    } else if (framework === 'solid-start') {
       await createSolidStartConfiguration(rootDir, bundler, typescript);
     } else {
       await createSolidConfiguration(rootDir, bundler, typescript);
@@ -426,7 +610,20 @@ async function main() {
     // Show what was configured
     const themeExt = typescript ? '.ts' : '.js';
     log('📚 Setup complete! Here\'s what was created:', 'cyan');
-    if (framework === 'solid-start') {
+    if (framework === 'astro') {
+      log('  ✅ Astro + SolidJS project configured', 'green');
+      log(`  ✅ Theme file: ./src/components/theme${themeExt}`, 'green');
+      log('  ✅ Global styles: ./src/styles/global.css', 'green');
+      log('  ✅ Lightning CSS plugin added to astro.config', 'green');
+      log('', '');
+      log('📚 Next steps:', 'cyan');
+      log('  1. Import global styles in your layout:', 'blue');
+      log('     import "../styles/global.css";', 'blue');
+      log('  2. Use styled components in .tsx files:', 'blue');
+      log('     import { styled } from "solid-styles";', 'blue');
+      log('  3. Add client directive for interactive components:', 'blue');
+      log('     <MyComponent client:load />', 'blue');
+    } else if (framework === 'solid-start') {
       log('  ✅ SolidStart project configured', 'green');
       log(`  ✅ Theme file: ./src/theme${themeExt} → import { theme } from "./src/theme"`, 'green');
       log('  ✅ Global styles: ./src/app.css → import "./src/app.css"', 'green');

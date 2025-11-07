@@ -15,14 +15,15 @@
 4. [Core Concepts](#core-concepts)
 5. [API Reference (With Examples)](#api-reference-with-examples)
 6. [Advanced Animation System (Comprehensive Guide)](#advanced-animation-system-comprehensive-guide)
-7. [Advanced Patterns](#advanced-patterns)
-8. [Theme System](#theme-system)
-9. [SSR & Hydration](#ssr--hydration)
-10. [Performance & Bundle Size](#performance--bundle-size)
-11. [Troubleshooting & FAQ](#troubleshooting--faq)
-12. [Visual Guides & Diagrams](#visual-guides--diagrams)
-13. [Best Practices & Memory Tricks](#best-practices--memory-tricks)
-14. [Contributing](#contributing)
+7. [Layout Animations (Framer Motion-style)](#layout-animations-framer-motion-style)
+8. [Advanced Patterns](#advanced-patterns)
+9. [Theme System](#theme-system)
+10. [SSR & Hydration](#ssr--hydration)
+11. [Performance & Bundle Size](#performance--bundle-size)
+12. [Troubleshooting & FAQ](#troubleshooting--faq)
+13. [Visual Guides & Diagrams](#visual-guides--diagrams)
+14. [Best Practices & Memory Tricks](#best-practices--memory-tricks)
+15. [Contributing](#contributing)
 
 ---
 
@@ -32,6 +33,7 @@
 
 - **No runtime CSS-in-JS cost**: All styles are extracted and optimized at build time.
 - **Spring physics animations**: Natural, interactive UI with 25+ animation triggers.
+- **Layout animations**: Framer Motion-style automatic size/position transitions.
 - **SSR-ready**: Works seamlessly on server and client.
 - **TypeScript-first**: Full type safety and IntelliSense.
 - **Production-proven**: 100% test coverage, real browser validation.
@@ -893,6 +895,70 @@ const { transformStyles, isDragging } = useGestures(ref, { gestures: { drag: tru
 
 ---
 
+## Layout Animations (Framer Motion-style)
+
+Framer Motion-style layout animations for SolidJS. Automatically animate size and position changes when elements mount/unmount or when content changes.
+
+- Component: `LayoutAnimated`
+- Hook: `useLayoutAnimation`
+- Directive: `layoutAnimation`
+- Global config provider: `LayoutTransitionProvider`
+
+### Quick Start
+
+```tsx
+import { LayoutAnimated } from "solid-styles/animation";
+import { createSignal } from "solid-js";
+
+function ExpandableCard() {
+  const [expanded, setExpanded] = createSignal(false);
+  return (
+    <LayoutAnimated layout layoutTransition={{ stiffness: 400, damping: 30 }}>
+      <button onClick={() => setExpanded(!expanded())}>Toggle</button>
+      {expanded() && <div>Extra content</div>}
+    </LayoutAnimated>
+  );
+}
+```
+
+Polymorphic rendering is supported via the `as` prop (works with intrinsic tags and styled components):
+
+```tsx
+import { styled } from "solid-styles";
+const Card = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+`;
+
+<LayoutAnimated as={Card} layout>Content</LayoutAnimated>;
+```
+
+### API Overview
+
+- `LayoutAnimated` — wrapper that adds layout animations to any element; accepts `as`, `layout` (boolean), and `layoutTransition` (spring config and toggles like `animateWidth`, `animateHeight`, `animatePosition`, `useTransform`).
+- `useLayoutAnimation(config?)` — returns a ref callback; attach to any element to enable layout animations without a wrapper.
+- `layoutAnimation` directive — `<div use:layoutAnimation={true}>` or provide a config object.
+- `LayoutTransitionProvider` — set global defaults once; local `layoutTransition` values override globals.
+
+### Global Configuration
+
+```tsx
+import { LayoutTransitionProvider } from "solid-styles/animation";
+
+<LayoutTransitionProvider config={{ stiffness: 400, damping: 30 }}>
+  <App />
+</LayoutTransitionProvider>
+```
+
+### Learn More
+
+- Full guide: [LAYOUT_ANIMATIONS.md](./LAYOUT_ANIMATIONS.md)
+- Global config patterns: [GLOBAL_LAYOUT_CONFIG.md](./GLOBAL_LAYOUT_CONFIG.md)
+- Examples: [examples/layout-animation-examples.tsx](./examples/layout-animation-examples.tsx)
+
+---
+
 ## Advanced Patterns
 
 ### **Variants**
@@ -924,18 +990,23 @@ const theme = { colors: { accent: "#e63946" } };
 
 This library is designed with a modular architecture to ensure you only add what you need to your application's bundle, keeping it as lightweight as possible. You can import features on-demand.
 
-### Core Module (100KB)
+### Core Module (~21 KB compressed)
 
 Main styling capabilities with **automatic Lightning CSS optimization** built-in. Zero-runtime overhead!
+
+**Bundle Size**: 21.43 KB (minified + brotli) | 74 KB uncompressed ESM
 
 ```tsx
 import { styled, css, createGlobalStyles } from "solid-styles";
 // Lightning CSS optimization happens automatically ⚡
+// Compiled JavaScript - no runtime transpilation needed!
 ```
 
-### Animation Module (388KB)
+### Animation Module (~23 KB compressed)
 
 Physics-based animations with **built-in spring physics**. Everything included!
+
+**Bundle Size**: 23.3 KB (minified + brotli) | 84 KB uncompressed ESM
 
 ```tsx
 // Spring physics built-in with every styled component! 🌊
@@ -965,23 +1036,37 @@ const PhysicsCard = styled.div`
 
 For building custom solutions outside the main solid-styles API:
 
-### Advanced Gradient Utilities
+### Advanced Gradient Utilities (~3.3 KB compressed)
 
 Custom gradient interpolation for gradient color animations.
+
+**Bundle Size**: 3.33 KB (minified + brotli) | 9.8 KB uncompressed ESM
 
 ```tsx
 import { interpolateGradients } from "solid-styles/utils/gradient";
 // For custom gradient logic
 ```
 
-### Advanced Spring Utilities
+### Advanced Spring Utilities (~12 KB compressed)
 
 Direct access to spring physics engine for custom animations.
+
+**Bundle Size**: 11.68 KB (minified + brotli) | 38 KB uncompressed ESM
 
 ```tsx
 import { createSpring } from "solid-styles/utils/spring";
 // For custom non-styled animations
 ```
+
+### Build System
+
+Starting from v1.4.2, solid-styles uses **tsup** for optimized bundling:
+- ✅ Pre-compiled JavaScript (no runtime transpilation)
+- ✅ Both ESM and CommonJS formats
+- ✅ TypeScript declarations included
+- ✅ Source maps for debugging
+- ✅ Tree-shakeable exports
+- ✅ Browser-compatible (no Node.js dependencies)
 
 By keeping these features in separate modules, we empower you to make conscious decisions about performance and bundle size, ensuring your application remains as fast and efficient as possible.
 
@@ -1331,32 +1416,40 @@ function MyComponent() {
 
 ## Performance & Bundle Size
 
-### **Modular Bundle Sizes**
+### **Modular Bundle Sizes (v1.4.4+)**
 
-- **Core Module**: ~100KB (styled, css, createGlobalStyles + Lightning CSS optimization)
-- **Animation Module**: ~388KB (includes complete spring physics engine)
-- **Lite Version**: ~21KB (zero-runtime, build-time only)
+All sizes shown as **minified + brotli compressed** (production ready):
+
+- **Core Module**: 21.43 KB (styled, css, createGlobalStyles + Lightning CSS optimization)
+- **Animation Module**: 23.3 KB (includes complete spring physics engine)
+- **Spring Utilities**: 11.68 KB (standalone spring physics)
+- **Gradient Utilities**: 3.33 KB (gradient interpolation)
 - **Tree-shakeable**: Only import what you use
 - **No runtime CSS-in-JS**: All styles extracted at build time
 - **Lightning CSS**: 50-100x faster build times, 90% less runtime overhead
+- **Dual format**: ESM (.js) and CommonJS (.cjs) included
+
+**Total Package Size**: ~60 KB compressed (all modules combined)
 
 ### **Bundle Size Comparison**
 
 ```mermaid
 graph TD
   A["styled-components"] -->|"~40KB + runtime overhead"| D["Your App"]
-  B["solid-styles (core)"] -->|"~100KB static"| D
-  C["solid-styles (lite)"] -->|"~21KB zero-runtime"| D
-  E["solid-styles (full)"] -->|"~388KB with animations"| D
+  B["solid-styles (core)"] -->|"~21KB compressed"| D
+  C["solid-styles (gradient utils)"] -->|"~3.3KB compressed"| D
+  E["solid-styles (full)"] -->|"~60KB compressed"| D
 ```
 
 ### **Performance Benefits**
 
 - ⚡ **Zero runtime overhead**: All CSS extracted at build time
 - 🎯 **Tree-shakeable**: Import only the modules you need
-- 🚀 **Lightning CSS**: Faster builds, smaller bundles
+- 🚀 **Compiled output**: Pre-built ESM and CJS, no runtime transpilation
+- 📦 **Optimized bundling**: Uses tsup with esbuild for fast, efficient builds
 - 📱 **Mobile optimized**: Minimal JavaScript on client
 - 🔄 **SSR ready**: No hydration mismatches
+- 🌐 **Browser compatible**: No `process.env` dependencies
 
 ---
 
@@ -1481,6 +1574,45 @@ Make sure your build process includes Lightning CSS and you're not using dynamic
 <summary><strong>🔍 How do I debug animations?</strong></summary>
 
 Use the `AnimationDebugger` from `animation/debug-tools.tsx` for live state inspection. You can also enable debug mode to see animation state changes in the console.
+
+</details>
+
+<details>
+<summary><strong>❌ Getting "process is not defined" error?</strong></summary>
+
+**Fixed in v1.4.2+**. If you're on an older version, update to the latest:
+
+```bash
+npm update solid-styles
+# or
+pnpm update solid-styles
+```
+
+This error occurred because older versions used `process.env` which doesn't exist in browsers. v1.4.2+ uses browser-compatible `import.meta.env` instead.
+
+</details>
+
+<details>
+<summary><strong>🔄 Upgrading from v1.4.1 or earlier?</strong></summary>
+
+**No breaking changes!** v1.4.2 is a drop-in replacement that fixes critical bugs:
+
+✅ **What's Fixed:**
+- `process is not defined` errors in browser
+- Package now ships compiled JavaScript (not TypeScript source)
+- Proper ESM and CommonJS support
+- Optimized bundle sizes
+
+✅ **What Stays the Same:**
+- All APIs remain unchanged
+- Import paths are identical
+- No code changes required
+
+Just update and rebuild:
+```bash
+pnpm update solid-styles
+pnpm build
+```
 
 </details>
 

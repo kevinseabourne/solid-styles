@@ -72,17 +72,14 @@ export function useHoverTrigger(ref: Accessor<HTMLElement | null | undefined>) {
     const element = ref();
     if (!element) return;
 
-    console.log("[ANIM-TRACE] Setting up hover listeners for", element);
 
     // Mouse enter handler
     const handleMouseEnter = () => {
-      console.log("[ANIM-TRACE] Mouse enter event on", element);
       setIsHovered(true);
     };
 
     // Mouse leave handler
     const handleMouseLeave = () => {
-      console.log("[ANIM-TRACE] Mouse leave event on", element);
       setIsHovered(false);
     };
 
@@ -91,19 +88,16 @@ export function useHoverTrigger(ref: Accessor<HTMLElement | null | undefined>) {
     element.addEventListener("mouseleave", handleMouseLeave);
 
     // Debug trace
-    console.log("[ANIM-TRACE] Hover listeners set up: enter, leave");
 
     // Test event dispatch (only in development for debugging)
     if (process.env.NODE_ENV !== "production") {
       try {
         // Force a test event to ensure handlers are working
-        console.log("[ANIM-TRACE] Forcing test events for verification");
 
         // Simulate events but don't modify state
         const testEnter = new MouseEvent("mouseenter", { bubbles: true });
         const origDispatch = element.dispatchEvent;
         element.dispatchEvent = (ev) => {
-          console.log("[ANIM-TRACE] Test dispatch:", ev.type);
           return true; // Prevent actual event handling
         };
 
@@ -120,13 +114,11 @@ export function useHoverTrigger(ref: Accessor<HTMLElement | null | undefined>) {
     onCleanup(() => {
       element.removeEventListener("mouseenter", handleMouseEnter);
       element.removeEventListener("mouseleave", handleMouseLeave);
-      console.log("[ANIM-TRACE] Hover listeners removed");
     });
   });
 
   // Add more detailed logging
   createEffect(() => {
-    console.log("[ANIM-TRACE] Hover state changed:", isHovered());
   });
 
   return isHovered;
@@ -215,14 +207,12 @@ export function useClickTrigger(
         setClicked(true);
       }
 
-      console.log(`[ANIM-DEBUG] Click handler executed, new state: ${isClicked()}`);
     };
 
     // Handle click outside (if enabled)
     const handleDocumentClick = (e: MouseEvent) => {
       if (!element.contains(e.target as Node)) {
         if (isClicked()) {
-          console.log("[ANIM-DEBUG] Click outside detected, resetting state");
           setClicked(false);
         }
       }
@@ -319,12 +309,10 @@ export function useInViewTrigger(ref: Accessor<HTMLElement | null | undefined>, 
     const element = ref();
     if (!element) return;
 
-    console.log("[ANIM-TRACE] Setting up IntersectionObserver for", element);
 
     // Precompute visibility for SSR and initial state
     const isInitiallyVisible = isElementInViewport(element);
     if (isInitiallyVisible) {
-      console.log("[ANIM-TRACE] Element already in viewport on setup");
       setIsInView(true);
     }
 
@@ -334,29 +322,16 @@ export function useInViewTrigger(ref: Accessor<HTMLElement | null | undefined>, 
         // Get the entry for our element
         const entry = entries[0];
 
-        // Log detailed information about the intersection
-        console.log(
-          `[ANIM-TRACE] Intersection: ratio=${entry.intersectionRatio.toFixed(2)}, isIntersecting=${entry.isIntersecting}`,
-          {
-            boundingClientRect: entry.boundingClientRect,
-            intersectionRect: entry.intersectionRect,
-            rootBounds: entry.rootBounds,
-          }
-        );
-
         if (entry.isIntersecting) {
-          console.log("[ANIM-TRACE] Element entered viewport");
           setIsInView(true);
 
           // If once=true, disconnect after first intersection
           if (once) {
-            console.log("[ANIM-TRACE] Once=true, disconnecting observer");
             observer.disconnect();
           }
         } else {
           // Only set to false if not using 'once' mode
           if (!once) {
-            console.log("[ANIM-TRACE] Element left viewport");
             setIsInView(false);
           }
         }
@@ -366,11 +341,9 @@ export function useInViewTrigger(ref: Accessor<HTMLElement | null | undefined>, 
 
     // Start observing
     observer.observe(element);
-    console.log("[ANIM-TRACE] IntersectionObserver started with options:", { root, rootMargin, threshold, once });
 
     // Clean up
     onCleanup(() => {
-      console.log("[ANIM-TRACE] Disconnecting IntersectionObserver");
       observer.disconnect();
     });
   });

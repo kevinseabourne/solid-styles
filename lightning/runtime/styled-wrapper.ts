@@ -11,10 +11,6 @@ import { Dynamic } from "solid-js/web";
 import { resolvePropsToClass } from "./resolver";
 import { getCSSVariableManager } from "./css-variables";
 
-// Log when module loads
-if (typeof window !== "undefined") {
-  console.log("[LIGHTNING-CSS] Styled wrapper loaded");
-}
 
 // Helper to check if component has animations
 function hasAnimationProps(props: any): boolean {
@@ -53,21 +49,15 @@ export const styled = new Proxy(originalStyled, {
       return function LightningCSSComponent(props: any) {
         // Check if Lightning CSS is enabled
         if (typeof window !== "undefined" && window.__LIGHTNING_CSS_ENABLED__) {
-          console.log("[LIGHTNING-CSS] Styled component rendering with props:", Object.keys(props));
-
           // Check for animations
           if (hasAnimationProps(props)) {
-            console.log("[LIGHTNING-CSS] Animation props detected, using original system");
             return OriginalComponent(props);
           }
 
           // Try to resolve static class
-          console.log("[LIGHTNING-CSS] Calling resolvePropsToClass with:", props);
           const staticClass = resolvePropsToClass(props);
-          console.log("[LIGHTNING-CSS] Resolver returned:", staticClass);
 
           if (staticClass) {
-            console.log("[LIGHTNING-CSS] Static class resolved:", staticClass);
 
             // Create optimized component
             const [localProps, otherProps] = splitProps(props, ["className", "style", "ref"]);
@@ -81,9 +71,7 @@ export const styled = new Proxy(originalStyled, {
               const cssVariables = cssVarManager.generateComponentVariables(componentName, props);
 
               if (Object.keys(cssVariables).length > 0) {
-                console.log("[LIGHTNING-CSS] Generated CSS variables:", cssVariables);
                 cssVarManager.applyCSSVariables(el, cssVariables);
-                console.log("[LIGHTNING-CSS] Applied CSS variables to element");
               }
 
               // Call original ref
@@ -107,13 +95,10 @@ export const styled = new Proxy(originalStyled, {
             } else {
               return createComponent(prop as any, mergedProps);
             }
-          } else {
-            console.log("[LIGHTNING-CSS] Static class resolved:", staticClass);
           }
 
           // Fallback to runtime
           const runtimeComponent = OriginalComponent(props);
-          console.log("[LIGHTNING-CSS] Using runtime component");
 
           // Add CSS variables to runtime component if it's a valid component
           if (runtimeComponent && typeof runtimeComponent === "object" && "ref" in runtimeComponent) {
@@ -125,9 +110,7 @@ export const styled = new Proxy(originalStyled, {
               const cssVariables = cssVarManager.generateComponentVariables(componentName, props);
 
               if (Object.keys(cssVariables).length > 0) {
-                console.log("[LIGHTNING-CSS] Generated CSS variables:", cssVariables);
                 cssVarManager.applyCSSVariables(el, cssVariables);
-                console.log("[LIGHTNING-CSS] Applied CSS variables to element");
               }
 
               if (typeof originalRef === "function") {

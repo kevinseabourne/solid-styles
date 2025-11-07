@@ -98,8 +98,6 @@ export function AnimationDebugger() {
 
   onMount(() => {
     // Add event listeners to capture animation events
-    const originalConsoleLog = console.log;
-    console.log = (...args: any[]) => {
       originalConsoleLog(...args);
 
       // Capture animation related logs
@@ -115,9 +113,7 @@ export function AnimationDebugger() {
       setAnimations(Array.from(registeredAnimations.entries()));
     }, 500);
 
-    // Restore console.log on cleanup
     onCleanup(() => {
-      console.log = originalConsoleLog;
       clearInterval(intervalId);
     });
   });
@@ -129,20 +125,17 @@ export function AnimationDebugger() {
 
   // Run diagnostics
   const runDiagnostics = () => {
-    console.log("[ANIM-DEBUG] Running manual diagnostics");
     runAnimationDiagnostics();
   };
 
   // Monitor element event listeners
   const analyzeEventListeners = () => {
-    console.log("[ANIM-DEBUG] Analyzing event listeners");
 
     // Find all elements with data-test-id attributes (our animated elements)
     const elements = document.querySelectorAll("[data-test-id]");
 
     elements.forEach((el) => {
       const testId = el.getAttribute("data-test-id");
-      console.log(`[ANIM-DEBUG] Element ${testId} event listeners:`, getEventListeners(el as HTMLElement));
     });
   };
 

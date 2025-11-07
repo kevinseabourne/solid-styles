@@ -34,19 +34,10 @@ export class RuntimeResolver {
     const styleProps = this.filterStyleProps(props);
     const propsKey = this.createPropsKey(styleProps);
 
-    if (this.enableDevMode) {
-      console.log(`[Lightning CSS] Resolving props:`, props);
-      console.log(`[Lightning CSS] Filtered style props:`, styleProps);
-      console.log(`[Lightning CSS] Generated key:`, propsKey);
-      console.log(`[Lightning CSS] Available keys in map:`, Array.from(this.staticClassMap.keys()));
-    }
 
     // Try direct lookup first
     const directLookup = this.staticClassMap.get(propsKey);
     if (directLookup) {
-      if (this.enableDevMode) {
-        console.log(`[Lightning CSS] Direct match found: ${propsKey} -> ${directLookup}`);
-      }
       return directLookup;
     }
 
@@ -59,9 +50,6 @@ export class RuntimeResolver {
 
     const altLookup1 = this.staticClassMap.get(altKey1);
     if (altLookup1) {
-      if (this.enableDevMode) {
-        console.log(`[Lightning CSS] Alternative match found: ${altKey1} -> ${altLookup1}`);
-      }
       return altLookup1;
     }
 
@@ -71,16 +59,8 @@ export class RuntimeResolver {
       const simpleKey = values.join("-");
       const simpleLookup = this.staticClassMap.get(simpleKey);
       if (simpleLookup) {
-        if (this.enableDevMode) {
-          console.log(`[Lightning CSS] Simple match found: ${simpleKey} -> ${simpleLookup}`);
-        }
         return simpleLookup;
       }
-    }
-
-    if (this.enableDevMode) {
-      console.log(`[Lightning CSS] No match found for props:`, styleProps);
-      console.log(`[Lightning CSS] Available keys:`, Array.from(this.staticClassMap.keys()));
     }
 
     return this.fallbackToRuntime ? null : null;
@@ -174,10 +154,6 @@ export class RuntimeResolver {
     Array.from(Object.entries(mappings)).forEach(([key, className]) => {
       this.staticClassMap.set(key, className);
     });
-
-    if (this.enableDevMode) {
-      console.log(`[Lightning CSS] Added ${Object.keys(mappings).length} class mappings`);
-    }
   }
 
   /**

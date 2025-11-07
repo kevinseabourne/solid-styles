@@ -16,7 +16,8 @@ import {
 } from "../utils/spring";
 
 // Debug mode flag - set to false for production and clean test output
-const IS_DEBUG_MODE = process.env.NODE_ENV === 'development' && process.env.ENABLE_DEBUG_LOGGING === 'true';
+// @ts-ignore - import.meta.env is replaced at build time
+const IS_DEBUG_MODE = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development' && import.meta.env?.ENABLE_DEBUG_LOGGING === 'true';
 
 import { AnimationTrigger } from "./hooks/useTriggers";
 
@@ -423,27 +424,23 @@ function colorToRgb(color: string): { r: number; g: number; b: number; a: number
 // Debug function to transform color objects to the format expected by the spring physics engine
 function deepProcessColorValues(colorObject: any): any {
   if (IS_DEBUG_MODE) {
-    console.log("[DEEP-PROCESS] Processing color value:", colorObject);
   }
 
   // Case 1: Direct string handling
   if (typeof colorObject === "string") {
     // Hex colors
     if (colorObject.startsWith("#")) {
-      console.log("[DEEP-PROCESS] Converting hex string to RGB object");
       return hexToRgb(colorObject);
     }
 
     // RGB/RGBA colors, HSL/HSLA colors, Named colors
     if (colorObject.match(/rgba?\(/) || colorObject.match(/hsla?\(/) || CSS.supports("color", colorObject)) {
-      console.log("[DEEP-PROCESS] Converting color string to RGB object:", colorObject);
       return colorToRgb(colorObject);
     }
 
     // Gradient strings
     if (colorObject.match(/(?:linear|radial|conic)-gradient\(/)) {
       if (IS_DEBUG_MODE) {
-        console.log("[DEEP-PROCESS] Converting gradient string - passing through for later parsing");
       }
       return colorObject; // Will be parsed in processColors in animatedStyled.tsx
     }
@@ -452,7 +449,6 @@ function deepProcessColorValues(colorObject: any): any {
   // Case 2: Already a Color object with value and format - convert to RGB object
   if (colorObject && typeof colorObject === "object" && "value" in colorObject && "format" in colorObject) {
     if (IS_DEBUG_MODE) {
-      console.log("[DEEP-PROCESS] Converting Color object to RGB object:", colorObject);
     }
     return colorToRgb(colorObject.value);
   }
@@ -466,7 +462,6 @@ function deepProcessColorValues(colorObject: any): any {
     "b" in colorObject
   ) {
     if (IS_DEBUG_MODE) {
-      console.log("[DEEP-PROCESS] Already an RGB object:", colorObject);
     }
     // Ensure alpha is present
     return { ...colorObject, a: colorObject.a ?? 1 };
@@ -475,7 +470,6 @@ function deepProcessColorValues(colorObject: any): any {
   // Case 4: Object with potentially nested color values
   if (colorObject && typeof colorObject === "object") {
     if (IS_DEBUG_MODE) {
-      console.log("[DEEP-PROCESS] Processing object with potential color properties");
     }
     const result = Array.isArray(colorObject) ? [...colorObject] : { ...colorObject };
 
@@ -619,7 +613,6 @@ export function createAnimation<T extends SpringTarget>(
 
   // Transform color values in both initial and target values
   if (IS_DEBUG_MODE) {
-    console.log(`[SPRING-DEBUG] Starting animation to target:`, targetValue);
   }
 
   // Enhanced color processing for spring physics
@@ -627,15 +620,11 @@ export function createAnimation<T extends SpringTarget>(
   const processedInitial = deepProcessColorValues(initialValue);
 
   if (IS_DEBUG_MODE) {
-    console.log(`[SPRING-COLOR-FIX] Transformed target color values:`);
-    console.log(`  Original:`, targetValue);
-    console.log(`  Processed:`, processedTarget);
 
     // Diagnostic for color properties
     if (typeof processedTarget === "object" && processedTarget !== null) {
       for (const key in processedTarget) {
         if (key.toLowerCase().includes("color") || key.toLowerCase().includes("background")) {
-          console.log(`[SPRING-COLOR] Property ${key} =`, JSON.stringify(processedTarget[key]));
         }
       }
     }
@@ -646,14 +635,12 @@ export function createAnimation<T extends SpringTarget>(
     ...normalizedOptions,
     onStart: () => {
       if (IS_DEBUG_MODE) {
-        console.log("[ANIM-CALLBACK] onStart called");
       }
       setState("running");
       options.onStart?.();
     },
     onComplete: () => {
       if (IS_DEBUG_MODE) {
-        console.log("[ANIM-CALLBACK] onComplete called");
       }
       setState("completed");
       options.onComplete?.();
@@ -663,7 +650,6 @@ export function createAnimation<T extends SpringTarget>(
     },
     onInterrupt: () => {
       if (IS_DEBUG_MODE) {
-        console.log("[ANIM-CALLBACK] onInterrupt called");
       }
       options.onInterrupt?.();
     },
@@ -679,7 +665,6 @@ export function createAnimation<T extends SpringTarget>(
   // Start animation with the specified target
   const start = (target: WidenSpringTarget<T> = processedTarget, springOpts: AnimationOptions = {}) => {
     if (IS_DEBUG_MODE) {
-      console.log(`[ANIM-START] Setting new target value:`, target);
     }
 
     const processedStart = deepProcessColorValues(target);
@@ -687,7 +672,6 @@ export function createAnimation<T extends SpringTarget>(
     try {
       // Diagnostic logging for state transitions
       if (IS_DEBUG_MODE) {
-        console.log(`[ANIM-STATE-DEBUG] Animation state before start: ${state()}, current value:`, springValue());
       }
 
       // If an animation is already running this constitutes an interruption.
@@ -707,7 +691,6 @@ export function createAnimation<T extends SpringTarget>(
       }
 
       if (IS_DEBUG_MODE) {
-        console.log(`[ANIM-STATE-DEBUG] Setting spring animation with:`, { target: processedStart });
       }
 
       // Set the spring target value – capture promise to surface errors.
@@ -849,7 +832,6 @@ export function createToggleAnimation<T extends SpringTarget>(
   // Debug toggle state changes
   createEffect(() => {
     const active = isActive();
-    console.log(`[TOGGLE-DEBUG] Toggle animation active state changed to: ${active}`);
   });
 
   // Enhanced controls for toggling
@@ -859,7 +841,6 @@ export function createToggleAnimation<T extends SpringTarget>(
     // Toggle between states
     toggle: () => {
       const nextState = !isActive();
-      console.log(`[TOGGLE-DEBUG] Toggle animation from ${isActive()} to ${nextState}`);
 
       if (nextState) {
         controls.activate();
@@ -871,7 +852,6 @@ export function createToggleAnimation<T extends SpringTarget>(
 
     // Activate (animate to active value)
     activate: () => {
-      console.log(`[TOGGLE-DEBUG] Activating toggle animation`);
 
       // Only update if state is changing
       if (!isActive()) {
@@ -880,25 +860,20 @@ export function createToggleAnimation<T extends SpringTarget>(
         // CRITICAL FIX: Force state update before animation starts
         // This ensures animations maintain continuity
         const currentState = animation.state();
-        console.log(`[TOGGLE-STATE] Current animation state before activation: ${currentState}`);
 
         // CRITICAL FIX: Force a full state update even if animation appears to be in the desired state
         // This addresses edge cases where animation state seems correct but values aren't updating
         const springValue = animation.value();
-        console.log(`[TOGGLE-DEBUG] Current spring value before activation:`, springValue);
 
         // Start the animation to the active value, preserving physics
         animation.controls.start(activeValue as any);
 
         // CRITICAL FIX: Ensure animation is running and track completion
         setTimeout(() => {
-          console.log(`[TOGGLE-VERIFY] Animation state 1 frame after activation: ${animation.state()}`);
-          console.log(`[TOGGLE-VERIFY] Animation value 1 frame after activation:`, animation.value());
         }, 16);
 
         // Ensure state is properly tracked
         if (currentState !== "running") {
-          console.log(`[TOGGLE-STATE] Animation state after activation: ${animation.state()}`);
         }
       }
       return controls;
@@ -906,7 +881,6 @@ export function createToggleAnimation<T extends SpringTarget>(
 
     // Deactivate (animate to initial value)
     deactivate: () => {
-      console.log(`[TOGGLE-DEBUG] Deactivating toggle animation`);
 
       // Only update if state is changing
       if (isActive()) {
@@ -914,14 +888,12 @@ export function createToggleAnimation<T extends SpringTarget>(
 
         // CRITICAL FIX: Get current animation state for proper transition
         const currentState = animation.state();
-        console.log(`[TOGGLE-STATE] Current animation state before deactivation: ${currentState}`);
 
         // Animate back to initial value
         animation.controls.start(initialValue as any);
 
         // Ensure state is properly tracked
         if (currentState !== "running") {
-          console.log(`[TOGGLE-STATE] Animation state after deactivation: ${animation.state()}`);
         }
       }
       return controls;
@@ -929,7 +901,6 @@ export function createToggleAnimation<T extends SpringTarget>(
 
     // Force specific state
     setActive: (active: boolean) => {
-      console.log(`[TOGGLE-DEBUG] Directly setting toggle state to: ${active}`);
       if (active !== isActive()) {
         active ? controls.activate() : controls.deactivate();
       }

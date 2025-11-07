@@ -2,6 +2,7 @@
 import { defineConfig } from "vite";
 import path from "path";
 import solid from "vite-plugin-solid";
+import { playwright } from "@vitest/browser-playwright";
 
 export default defineConfig({
   plugins: [solid()],
@@ -17,9 +18,14 @@ export default defineConfig({
     // Use browser environment by default - realistic testing
     browser: {
       enabled: true,
-      provider: "playwright",
+      provider: playwright({ browser: "chromium" }),
       name: "chromium",
       headless: process.env.CI !== "false",
+      instances: [
+        {
+          browser: "chromium",
+        },
+      ],
       // Browser configuration optimized for testing
       api: {
         port: 9080,
@@ -31,15 +37,12 @@ export default defineConfig({
       },
       isolate: true,
       fileParallelism: false, // Better for Solid Styles tests
-      // Playwright configuration to prevent route conflicts
-      providerOptions: {
-        launch: {
-          args: ['--disable-web-security', '--disable-features=VizDisplayCompositor'],
-        },
-        context: {
-          // Prevent route handling conflicts
-          ignoreHTTPSErrors: true,
-        },
+      // Playwright configuration
+      launch: {
+        args: ['--disable-web-security', '--disable-features=VizDisplayCompositor'],
+      },
+      context: {
+        ignoreHTTPSErrors: true,
       },
     },
     globals: true,

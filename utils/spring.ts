@@ -1,7 +1,8 @@
 import { Accessor, batch, createEffect, createMemo, createSignal, on, onCleanup } from "solid-js";
 
 // Debug mode flag - set to false for production and clean test output
-const IS_DEBUG_MODE = process.env.NODE_ENV === 'development' && process.env.ENABLE_DEBUG_LOGGING === 'true';
+// @ts-ignore - import.meta.env is replaced at build time
+const IS_DEBUG_MODE = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development' && import.meta.env?.ENABLE_DEBUG_LOGGING === 'true';
 import {
   NumericalColor,
   NumericalGradient,
@@ -412,7 +413,7 @@ if (isServer) {
   // In test environments, requestAnimationFrame is often not advanced by fake timers.
   // We therefore fall back to a setTimeout-based shim that *is* controlled by the timer mocks,
   // ensuring our spring loops progress when the tests use `vi.advanceTimersByTime()`.
-  const GLOBAL_TEST_ENV = typeof process !== "undefined" && process.env.NODE_ENV === "test";
+  const GLOBAL_TEST_ENV = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
   if (GLOBAL_TEST_ENV) {
     request_animation_frame = (cb) => setTimeout(() => cb(Date.now()), 16) as unknown as number;
   } else {
@@ -425,7 +426,7 @@ if (isServer) {
 // ---------------------------------------------------------------------------
 // Expose a test-friendly global requestAnimationFrame shim
 // ---------------------------------------------------------------------------
-const GLOBAL_TEST_ENV = typeof process !== "undefined" && process.env.NODE_ENV === "test";
+const GLOBAL_TEST_ENV = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
 
 if (!isServer && GLOBAL_TEST_ENV) {
   if (typeof globalThis.requestAnimationFrame === "undefined") {
@@ -443,7 +444,7 @@ if (!isServer && GLOBAL_TEST_ENV) {
 // from progressing.  We therefore fall back to `Date.now()` when running under a test environment so that
 // simulated time advances as expected.
 
-const TEST_ENV = typeof process !== "undefined" && process.env.NODE_ENV === "test";
+const TEST_ENV = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
 
 const nowFn = isServer
   ? () => Date.now()
@@ -855,6 +856,43 @@ export function createSpring<T extends SpringTarget>(
       console.log("[SET] Called with newValue:", newValue, "opts:", opts);
     }
 
+    // ------------------------------------------------------------------
+    // CRITICAL: Validate newValue FIRST before any other logic
+    // This must happen BEFORE the promise wrapper is set up
+    // ------------------------------------------------------------------
+    const containsInvalid = (val: any): boolean => {
+      if (typeof val === "number") return !Number.isFinite(val);
+      if (Array.isArray(val)) return val.some(containsInvalid);
+      if (val && typeof val === "object") return Object.values(val).some(containsInvalid);
+      return false;
+    };
+
+    if (containsInvalid(newValue)) {
+      const err = new Error("Spring target contains NaN or Infinity");
+      safeCallback(normalizedOptions.onError, err);
+      
+      // CRITICAL FIX: Abort any existing animation task BEFORE resetting state
+      const existingTask = task();
+      if (existingTask) {
+        existingTask.abort();
+      }
+      
+      // Force synchronous cleanup to prevent hanging
+      batch(() => {
+        setSpringValue(() => initialValue); // Use safe initial value
+        setLastValue(() => initialValue); // Also reset last value for consistency
+        setIsAnimating(false);
+        setTask(null);
+        setCancelTask(true); // Cancel any pending tasks
+        setTargetValue(() => undefined as any); // Clear target
+      });
+      
+      safeCallback(normalizedOptions.onComplete);
+      
+      // Return immediately resolved promise to prevent hanging
+      return Promise.resolve();
+    }
+
     // FAST PATH: If explicitly requested via opts.hard, immediately settle to target even in tests
     // Removed the unconditional immediate-set in test environment so that soft and normal animations
     // still animate and tests that expect intermediate states pass.
@@ -885,26 +923,6 @@ export function createSpring<T extends SpringTarget>(
       // If an animation is currently running and the new target differs, fire onInterrupt callback.
       if (isAnimating()) {
         safeCallback(normalizedOptions.onInterrupt);
-      }
-
-      // ------------------------------------------------------------------
-      // Validate newValue before proceeding (detect NaN / invalid numbers)
-      // ------------------------------------------------------------------
-      const containsInvalid = (val: any): boolean => {
-        if (typeof val === "number") return !Number.isFinite(val);
-        if (Array.isArray(val)) return val.some(containsInvalid);
-        if (val && typeof val === "object") return Object.values(val).some(containsInvalid);
-        return false;
-      };
-
-      if (containsInvalid(newValue)) {
-        const err = new Error("Spring target contains NaN or Infinity");
-        safeCallback(normalizedOptions.onError, err);
-        // Hard-set to initial value to keep system stable
-        setSpringValue(() => newValue as any);
-        setIsAnimating(false);
-        safeCallback(normalizedOptions.onComplete);
-        return;
       }
 
       // Immediate jump conditions – only apply when the caller explicitly

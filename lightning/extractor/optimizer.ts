@@ -8,10 +8,6 @@ import { transform, Features, browserslistToTargets } from "lightningcss";
 import browserslist from "browserslist";
 import type { ExtractedStyle, TransformResult } from "../types";
 
-console.log("[OPTIMIZER-IMPORT-DEBUG] lightningcss transform function:", typeof transform);
-console.log("[OPTIMIZER-IMPORT-DEBUG] transform toString:", transform.toString().substring(0, 200));
-console.log("[OPTIMIZER-IMPORT-DEBUG] browserslist function:", typeof browserslist);
-
 /**
  * Optimize CSS using Lightning CSS
  */

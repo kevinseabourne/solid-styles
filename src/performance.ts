@@ -257,7 +257,6 @@ export function measureStyleApplication<T>(fn: () => T): T {
     performanceMonitor.recordStyleApplicationTime(duration);
     // Emit a console log that mirrors measureRenderTime so the test-suite can spy on
     // style calculation performance just like it does for render performance.
-    console.log(`[Performance] StyleCalculation:`, duration, "ms");
     return result;
   }
 
@@ -565,7 +564,6 @@ performanceMonitor = function (name: string = "Unnamed", opts?: { threshold?: nu
       }
 
       if (process.env.NODE_ENV !== "production") {
-        console.log(`[Performance] ${name}:`, duration, "ms");
       }
 
       return duration;

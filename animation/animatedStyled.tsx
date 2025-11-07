@@ -37,7 +37,8 @@ import { Dynamic } from "solid-js/web";
 import { styled } from "../src";
 
 // Debug mode flag - set to false for production and clean test output
-const IS_DEBUG_MODE = process.env.NODE_ENV === 'development' && process.env.ENABLE_DEBUG_LOGGING === 'true';
+// @ts-ignore - import.meta.env is replaced at build time
+const IS_DEBUG_MODE = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development' && import.meta.env?.ENABLE_DEBUG_LOGGING === 'true';
 
 // =============================================================================
 // Constants and Utilities
@@ -519,7 +520,6 @@ const applyStyles = (styles: Record<string, any>, el: HTMLElement) => {
       el.style.transform = `${currentTransform} ${key}(${transformValue})`.trim();
 
       if (IS_DEBUG_MODE) {
-        console.log(`[ANIM-DEBUG] Applied transform ${key}(${transformValue}) to ${el.getAttribute("data-test-id")}`);
       }
     } else if (typeof value !== "undefined" && value !== null) {
       // Convert to string value with unit if needed
@@ -532,13 +532,11 @@ const applyStyles = (styles: Record<string, any>, el: HTMLElement) => {
       el.style[key as any] = stringValue;
 
       if (IS_DEBUG_MODE) {
-        console.log(`[ANIM-STYLE] Applied style ${key}: ${stringValue} to element ${el.getAttribute("data-test-id")}`);
       }
     }
   });
 
   if (IS_DEBUG_MODE) {
-    console.log(`[ANIM-REF] Applied styles directly to element:`, styles);
   }
 };
 
@@ -558,24 +556,17 @@ const triggerRegistry = new Map<
 // Enhanced registerAnimation function that now connects the two systems
 const registerAnimation = (id: string, animation: any, config: any) => {
   if (IS_DEBUG_MODE) {
-    console.log(`[ANIM-REGISTER] Registering animation for ${id} with config:`, config);
-    console.log(`[ANIM-REGISTER] Animation trigger:`, config.when);
   }
 
   // Extract the element test ID from the animation ID (format is typically elementId-anim-X)
   const elementTestId = id.split("-anim-")[0];
   if (IS_DEBUG_MODE) {
-    console.log(`[ANIM-REGISTER] Extracted element test ID: ${elementTestId}`);
   }
 
   // For click animations, add extra debugging
   const isClickAnimation = config.when === "click" || (Array.isArray(config.when) && config.when.includes("click"));
 
   if (isClickAnimation && IS_DEBUG_MODE) {
-    console.log(`[ANIM-REGISTER] ⚠️ CLICK ANIMATION DETECTED for ${elementTestId}`);
-    console.log(`[ANIM-REGISTER] Click animation has valid from:`, config.from);
-    console.log(`[ANIM-REGISTER] Click animation has valid to:`, config.to);
-    console.log(`[ANIM-REGISTER] Click animation controls:`, animation);
   }
 
   // Store the animation so we can access it directly for clicks
@@ -586,20 +577,17 @@ const registerAnimation = (id: string, animation: any, config: any) => {
     config,
   });
   if (IS_DEBUG_MODE) {
-    console.log(`[ANIM-REGISTER] Animation registered with ID ${id} for element ${elementTestId}`);
   }
 
   // CRITICAL: Add to trigger registry if it doesn't exist
   let triggerEntry = triggerRegistry.get(elementTestId);
   if (!triggerEntry) {
     if (IS_DEBUG_MODE) {
-      console.log(`[ANIM-REGISTER] Creating new trigger entry for ${elementTestId}`);
     }
 
     triggerEntry = {
       setActive: (active: boolean) => {
         if (IS_DEBUG_MODE) {
-          console.log(`[ANIM-TRIGGER] setActive(${active}) called for ${elementTestId}`);
         }
 
         // Track which animations were affected by this trigger
@@ -611,7 +599,6 @@ const registerAnimation = (id: string, animation: any, config: any) => {
         // Directly control animations when setActive is called
         triggerEntry.animations.forEach((anim, animId) => {
           if (IS_DEBUG_MODE) {
-            console.log(`[ANIM-TRIGGER] Processing animation ${animId}`);
           }
           const isRelevantAnimation =
             anim.config.when === "all" ||
@@ -621,19 +608,16 @@ const registerAnimation = (id: string, animation: any, config: any) => {
               Array.from(triggerEntry!.triggers).some((t) => anim.config.when.includes(t)));
 
           if (IS_DEBUG_MODE) {
-            console.log(`[ANIM-TRIGGER] Animation is relevant:`, isRelevantAnimation);
           }
 
           if (isRelevantAnimation) {
             affectedAnimations++;
             if (IS_DEBUG_MODE) {
-              console.log(`[ANIM-TRIGGER] Will control animation ${animId} -> ${active ? "to" : "from"}`);
             }
 
             try {
               if (active) {
                 if (IS_DEBUG_MODE) {
-                  console.log(`[ANIM-TRIGGER] Starting animation to:`, anim.config.to);
                 }
 
                 // CRITICAL PHYSICS FIX: Properly apply spring physics by separating config from target
@@ -653,7 +637,6 @@ const registerAnimation = (id: string, animation: any, config: any) => {
                 if (anim.config.damping !== undefined) springConfig.damping = anim.config.damping;
                 if (anim.config.precision !== undefined) springConfig.precision = anim.config.precision;
 
-                console.log(`[ANIM-TRIGGER] Spring config:`, springConfig);
 
                 // Normalize spring parameters if needed
                 const normalizedConfig = { ...springConfig };
@@ -664,17 +647,13 @@ const registerAnimation = (id: string, animation: any, config: any) => {
                   normalizedConfig.damping = normalizedConfig.damping / 100;
                 }
 
-                console.log(`[ANIM-TRIGGER] Normalized spring config:`, normalizedConfig);
-                console.log(`[ANIM-TRIGGER] Animation controls:`, anim.controls);
 
                 anim.controls.start(anim.config.to, {
                   ...normalizedConfig,
                   hard: false, // Explicitly use spring physics
                 });
 
-                console.log(`[ANIM-TRIGGER] Animation started successfully`);
               } else if (anim.config.reverseOnExit !== false) {
-                console.log(`[ANIM-TRIGGER] Reversing animation to:`, anim.config.from);
 
                 // Same normalization for the reversed animation
                 let springConfig = {
@@ -702,10 +681,6 @@ const registerAnimation = (id: string, animation: any, config: any) => {
                   normalizedConfig.damping = normalizedConfig.damping / 100;
                 }
 
-                console.log(
-                  `[SPRING-NORMALIZE] Original: stiffness=${springConfig.stiffness}, damping=${springConfig.damping} → Normalized: stiffness=${normalizedConfig.stiffness}, damping=${normalizedConfig.damping}`
-                );
-
                 // Start animation with correctly normalized physics configuration
                 anim.controls.start(anim.config.from, {
                   ...normalizedConfig,
@@ -718,7 +693,6 @@ const registerAnimation = (id: string, animation: any, config: any) => {
           }
         });
 
-        console.log(`[ANIM-TRIGGER] Affected ${affectedAnimations} animations`);
       },
       triggers: new Set<AnimationTrigger>(),
       animations: new Map(),
@@ -730,8 +704,6 @@ const registerAnimation = (id: string, animation: any, config: any) => {
   const animationId = `${elementTestId}-${triggerEntry.animations.size}`;
 
   if (IS_DEBUG_MODE) {
-    console.log(`[ANIM-REGISTER] Adding animation to trigger registry with ID ${animationId}`);
-    console.log(`[ANIM-REGISTER] Animation config.when:`, config.when);
   }
 
   triggerEntry.animations.set(animationId, {
@@ -750,7 +722,6 @@ const registerAnimation = (id: string, animation: any, config: any) => {
         const validTrigger = trigger;
         triggerEntry.triggers.add(validTrigger);
         if (IS_DEBUG_MODE) {
-          console.log(`[ANIM-REGISTER] Added trigger '${trigger}' to ${elementTestId}`);
         }
       });
     } else {
@@ -761,7 +732,6 @@ const registerAnimation = (id: string, animation: any, config: any) => {
       const validTrigger = config.when;
       triggerEntry.triggers.add(validTrigger);
       if (IS_DEBUG_MODE) {
-        console.log(`[ANIM-REGISTER] Added trigger '${config.when}' to ${elementTestId}`);
       }
     }
   }
@@ -781,7 +751,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
   }
 
   if (IS_DEBUG_MODE) {
-    console.log(`[ANIM-SETUP] Setting up direct event handlers for ${testId}`);
   }
 
   // Spring physics preset for smoother animations
@@ -799,7 +768,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     const targetTestId = targetElement.getAttribute("data-test-id");
 
     if (IS_DEBUG_MODE) {
-      console.log(`[ANIM-EVENT] Direct mouseenter event on ${targetTestId || "unknown"}!`);
     }
 
     // Skip if we don't have a test ID
@@ -811,7 +779,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     // ARCHITECTURE FIX: Use the unified trigger registry
     const triggerEntry = triggerRegistry.get(targetTestId);
     if (triggerEntry && triggerEntry.triggers.has("hover")) {
-      console.log(`[ANIM-TRIGGER] Setting hover state to TRUE for ${targetTestId}`);
       triggerEntry.setActive(true);
 
       // Also find all animations for this element to directly control them
@@ -824,7 +791,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
         ) {
           // CRITICAL PHYSICS FIX: Properly apply spring physics by separating config from target
           try {
-            console.log(`[ANIM-DIRECT] Directly starting hover animation ${id} with spring physics`);
 
             // Extract the proper spring config from the animation configuration
             // Use proper null checking and extract embedded config properly
@@ -836,7 +802,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             // First try direct config property
             if (configObj.config && typeof configObj.config === "object") {
               springConfig = configObj.config;
-              console.log(`[ANIM-CONFIG] Found direct config property:`, springConfig);
             }
             // Then try individual spring properties at the root level
             else if (configObj.stiffness !== undefined || configObj.damping !== undefined) {
@@ -845,12 +810,10 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                 damping: configObj.damping,
                 precision: configObj.precision,
               };
-              console.log(`[ANIM-CONFIG] Found root level spring properties:`, springConfig);
             }
             // Fall back to preset if available
             else if (smoothSpringConfig) {
               springConfig = smoothSpringConfig;
-              console.log(`[ANIM-CONFIG] Using hover preset:`, springConfig);
             }
             // Final fallback to a hardcoded spring physics
             else {
@@ -860,16 +823,10 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                 precision: 0.005,
                 duration: 500,
               };
-              console.log(`[ANIM-CONFIG] Using fallback spring config:`, springConfig);
             }
 
             // Ensure we have a valid object
             springConfig = springConfig || {};
-
-            // Log final physics parameters for debugging
-            console.log(
-              `[ANIM-PHYSICS] Using physics params: stiffness=${springConfig.stiffness}, damping=${springConfig.damping}, precision=${springConfig.precision}`
-            );
 
             // PARAMETER SCALE FIX: Normalize spring physics parameters to core engine scale
             const normalizedConfig = { ...springConfig };
@@ -882,10 +839,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             if (normalizedConfig.damping && normalizedConfig.damping > 1) {
               normalizedConfig.damping = normalizedConfig.damping / 100;
             }
-
-            console.log(
-              `[SPRING-NORMALIZE] Original: stiffness=${springConfig.stiffness}, damping=${springConfig.damping} → Normalized: stiffness=${normalizedConfig.stiffness}, damping=${normalizedConfig.damping}`
-            );
 
             // Start animation with correctly normalized physics configuration
             animation.controls.start(animation.config.to, {
@@ -905,7 +858,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     const targetElement = e.currentTarget as HTMLElement;
     const targetTestId = targetElement.getAttribute("data-test-id");
 
-    console.log(`[ANIM-EVENT] Direct mouseleave event on ${targetTestId || "unknown"}!`);
 
     // Skip if we don't have a test ID
     if (!targetTestId) return;
@@ -916,7 +868,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     // ARCHITECTURE FIX: Use the unified trigger registry
     const triggerEntry = triggerRegistry.get(targetTestId);
     if (triggerEntry && triggerEntry.triggers.has("hover")) {
-      console.log(`[ANIM-TRIGGER] Setting hover state to FALSE for ${targetTestId}`);
       triggerEntry.setActive(false);
 
       // Also find all animations for this element to directly control them
@@ -930,7 +881,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
           // Only reverse if configuration allows it
           if (animation.config.reverseOnExit !== false) {
             try {
-              console.log(`[ANIM-DIRECT] Directly reversing hover animation ${id} with spring physics`);
 
               // Extract the proper spring config from the animation configuration
               // Use proper null checking and extract embedded config properly
@@ -942,7 +892,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
               // First try direct config property
               if (configObj.config && typeof configObj.config === "object") {
                 springConfig = configObj.config;
-                console.log(`[ANIM-CONFIG] Found direct config property:`, springConfig);
               }
               // Then try individual spring properties at root level
               else if (configObj.stiffness !== undefined || configObj.damping !== undefined) {
@@ -951,12 +900,10 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                   damping: configObj.damping,
                   precision: configObj.precision,
                 };
-                console.log(`[ANIM-CONFIG] Found root level spring properties:`, springConfig);
               }
               // Fall back to preset if available
               else if (smoothSpringConfig) {
                 springConfig = smoothSpringConfig;
-                console.log(`[ANIM-CONFIG] Using hover preset:`, springConfig);
               }
               // Final fallback to a hardcoded spring physics
               else {
@@ -966,16 +913,10 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                   precision: 0.005,
                   duration: 500,
                 };
-                console.log(`[ANIM-CONFIG] Using fallback spring config:`, springConfig);
               }
 
               // Ensure we have a valid object
               springConfig = springConfig || {};
-
-              // Log final physics parameters for debugging
-              console.log(
-                `[ANIM-PHYSICS] Using physics params: stiffness=${springConfig.stiffness}, damping=${springConfig.damping}, precision=${springConfig.precision}`
-              );
 
               // PARAMETER SCALE FIX: Normalize spring physics parameters to core engine scale
               const normalizedConfig = { ...springConfig };
@@ -988,10 +929,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
               if (normalizedConfig.damping && normalizedConfig.damping > 1) {
                 normalizedConfig.damping = normalizedConfig.damping / 100;
               }
-
-              console.log(
-                `[SPRING-NORMALIZE] Original: stiffness=${springConfig.stiffness}, damping=${springConfig.damping} → Normalized: stiffness=${normalizedConfig.stiffness}, damping=${normalizedConfig.damping}`
-              );
 
               // Start animation with correctly normalized physics configuration
               animation.controls.start(animation.config.from, {
@@ -1011,7 +948,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     const targetElement = e.currentTarget as HTMLElement;
     const targetTestId = targetElement.getAttribute("data-test-id");
 
-    console.log(`[ANIM-EVENT] Direct click event on ${targetTestId || "unknown"}!`);
 
     // CRITICAL FIX: Check if the targetElement has already been processed
     if (!targetTestId) {
@@ -1029,47 +965,30 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
 
     // Set a data attribute for debugging
     targetElement.setAttribute("data-click-state", String(newState));
-    console.log(`[ANIM-STATE] Click state for ${targetTestId} set to ${newState}`);
 
     // Check trigger registry status
-    console.log(`[ANIM-DEBUG] Checking trigger registry for ${targetTestId}`);
-    console.log(`[ANIM-DEBUG] Trigger registry entries:`, Array.from(triggerRegistry.keys()));
 
     // ARCHITECTURE FIX: Use unified trigger registry for spring animations
     // just like hover animations do
     const triggerEntry = triggerRegistry.get(targetTestId);
 
     // Debug trigger registry entry
-    console.log(`[ANIM-DEBUG] Trigger entry found:`, !!triggerEntry);
     if (triggerEntry) {
-      console.log(`[ANIM-DEBUG] Trigger types:`, Array.from(triggerEntry.triggers));
-      console.log(`[ANIM-DEBUG] Has click trigger:`, triggerEntry.triggers.has("click"));
-      console.log(`[ANIM-DEBUG] Animation count:`, triggerEntry.animations ? triggerEntry.animations.size : 0);
     }
 
     if (triggerEntry && triggerEntry.triggers.has("click")) {
-      console.log(`[ANIM-TRIGGER] Setting click state to ${newState} for ${targetTestId}`);
 
       // This triggers the animation via triggerRegistry.setActive handler
-      console.log(`[ANIM-DEBUG] Before triggerEntry.setActive(${newState})`);
       triggerEntry.setActive(newState);
-      console.log(`[ANIM-DEBUG] After triggerEntry.setActive(${newState})`);
 
       // HYBRID APPROACH: Also directly control animations for additional reliability
       // This mirrors how hover animations work
-      console.log(`[ANIM-DEBUG] Animation registry entries:`, Array.from(animationRegistry.keys()));
 
       let animationsFound = 0;
 
       animationRegistry.forEach((animation, id) => {
-        console.log(`[ANIM-DEBUG] Checking animation ${id} for element ${targetTestId}`);
-        console.log(`[ANIM-DEBUG] Animation element ID:`, animation.elementId);
 
         if (animation.config && animation.config.when) {
-          console.log(
-            `[ANIM-DEBUG] Animation trigger:`,
-            Array.isArray(animation.config.when) ? animation.config.when : [animation.config.when]
-          );
         }
 
         if (
@@ -1079,10 +998,8 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             (Array.isArray(animation.config.when) && animation.config.when.includes("click")))
         ) {
           animationsFound++;
-          console.log(`[ANIM-DEBUG] Found matching click animation #${animationsFound}: ${id}`);
 
           try {
-            console.log(`[ANIM-SPRING] Applying click animation with spring physics to ${id}`);
 
             // Extract spring configuration exactly like hover does
             const configObj = animation.config || {};
@@ -1093,7 +1010,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             // First try direct config property
             if (configObj.config && typeof configObj.config === "object") {
               springConfig = configObj.config;
-              console.log(`[ANIM-CONFIG] Found direct config property:`, springConfig);
             }
             // Then try individual spring properties at root level
             else if (configObj.stiffness !== undefined || configObj.damping !== undefined) {
@@ -1102,7 +1018,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                 damping: configObj.damping,
                 precision: configObj.precision,
               };
-              console.log(`[ANIM-CONFIG] Found root level spring properties:`, springConfig);
             }
             // Fall back to a smooth preset
             else {
@@ -1111,7 +1026,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                 damping: 22,
                 precision: 0.001,
               };
-              console.log(`[ANIM-CONFIG] Using default spring config:`, springConfig);
             }
 
             // Normalize spring parameters exactly like hover does
@@ -1126,10 +1040,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
               normalizedConfig.damping = normalizedConfig.damping / 100;
             }
 
-            console.log(
-              `[SPRING-NORMALIZE] Original: stiffness=${springConfig.stiffness}, damping=${springConfig.damping} → Normalized: stiffness=${normalizedConfig.stiffness}, damping=${normalizedConfig.damping}`
-            );
-
             // CRITICAL FIX: Transform color values before animation
             const processColors = (value: any): any => {
               // Handle null/undefined
@@ -1140,7 +1050,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                 // Create a proper Color object that the spring system expects
                 // This is compatible with spring's interpolateColor function
                 const colorObj = { value: value, format: "hex" as "hex" | "rgb" | "rgba" | "hsl" | "hsla" };
-                console.log(`[COLOR-FIX] Converting hex ${value} to Color object:`, colorObj);
                 return colorObj;
               }
 
@@ -1163,7 +1072,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                       value: result[key],
                       format: "hex" as "hex" | "rgb" | "rgba" | "hsl" | "hsla",
                     };
-                    console.log(`[COLOR-FIX] Converting ${key} property to Color object:`, result[key]);
                     modified = true;
                   }
                   // Recursively process nested objects
@@ -1188,33 +1096,9 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             const toValueProcessed = processColors(animation.config.to);
 
             // Show detailed logs about the transformation
-            console.log(`[COLOR-TRANSFORM] Original from:`, animation.config.from);
-            console.log(`[COLOR-TRANSFORM] Processed from:`, fromValueProcessed);
-            console.log(`[COLOR-TRANSFORM] Original to:`, animation.config.to);
-            console.log(`[COLOR-TRANSFORM] Processed to:`, toValueProcessed);
 
             // Determine which animation target to use based on click state
             const target = newState ? toValueProcessed : fromValueProcessed;
-            console.log(`[ANIM-TARGET] Using target:`, target);
-
-            // TARGETED DIAGNOSTIC: Examine the final target format before it's passed to spring
-            console.log(`[SPRING-TARGET-DIAGNOSTIC] Final target format:`, {
-              targetType: typeof target,
-              hasBackgroundColor: target && typeof target === "object" && "backgroundColor" in target,
-              backgroundColorType:
-                target && typeof target === "object" && "backgroundColor" in target
-                  ? typeof target.backgroundColor
-                  : "not found",
-              backgroundColorValue:
-                target && typeof target === "object" && "backgroundColor" in target
-                  ? target.backgroundColor
-                  : "not found",
-              isColorObject: target && typeof target === "object" && "format" in target && "value" in target,
-              fullTarget: target,
-            });
-
-            // Add breakpoint for debugging
-            console.log(`[ANIMATION-FLOW] ====== STARTING ANIMATION NOW ======`);
 
             // Start animation with correctly normalized physics configuration
             animation.controls.start(target, {
@@ -1222,14 +1106,12 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
               hard: false, // Ensure spring physics are used (not immediate)
             });
 
-            console.log(`[ANIM-SPRING] Spring animation started for ${id}`);
           } catch (err) {
             console.error(`[ANIM-ERROR] Failed to apply click animation:`, err);
           }
         }
       });
 
-      console.log(`[ANIM-DEBUG] Found ${animationsFound} click animations for ${targetTestId}`);
     }
 
     // CRITICAL FIX: Setup document click listener for click outside detection
@@ -1248,7 +1130,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
 
         // Check if click is outside our element
         if (targetElement !== outsideEvent.target && !targetElement.contains(outsideEvent.target as Node)) {
-          console.log(`[CLICK-OUTSIDE] Detected click outside of ${targetTestId}`);
 
           // Deactivate on click outside
           clickedStates.set(targetTestId, false);
@@ -1259,7 +1140,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             // Add null check
             const triggerEntry = triggerRegistry.get(targetTestId);
             if (triggerEntry && triggerEntry.triggers.has("click")) {
-              console.log(`[ANIM-TRIGGER] Setting click state to FALSE for ${targetTestId} (outside click)`);
               triggerEntry.setActive(false);
 
               // HYBRID APPROACH: Also directly control animations for additional reliability
@@ -1315,7 +1195,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                         hard: false, // Ensure spring physics are used
                       });
 
-                      console.log(`[ANIM-SPRING] Reversed animation with spring physics on click outside`);
                     } catch (err) {
                       console.error(`[ANIM-ERROR] Failed to reverse animation:`, err);
                     }
@@ -1336,13 +1215,11 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
       }, 10);
     }
 
-    console.log(`[ANIM-DEBUG] ===== END CLICK ANIMATION DIAGNOSTICS =====`);
   };
 
   // CRITICAL FIX: Check if this element already has event handlers to prevent duplication
   const elementId = el.getAttribute("data-test-id") || "";
   if (elementsWithEventHandlers.has(elementId)) {
-    console.log(`[ANIM-EVENT] Element ${elementId} already has event handlers, skipping setup`);
     // Return empty cleanup function since we didn't add any new handlers
     return () => {};
   }
@@ -1355,7 +1232,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
   // Mark this element as having event handlers
   if (elementId) {
     elementsWithEventHandlers.add(elementId);
-    console.log(`[ANIM-EVENT] Added ${elementId} to elements with event handlers`);
   }
 
   // Store handlers for cleanup
@@ -1367,7 +1243,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     // Remove from tracked elements on cleanup
     if (elementId) {
       elementsWithEventHandlers.delete(elementId);
-      console.log(`[ANIM-EVENT] Removed ${elementId} from elements with event handlers`);
     }
   };
 };
@@ -1493,12 +1368,6 @@ const isColorProperty = (prop: string): boolean => {
 // Helper function to transform hex colors to RGB objects for spring animation
 // This is used across multiple handlers to ensure color animations work properly
 const processColors = (value: any): any => {
-  // DIAGNOSTIC: Track input type
-  console.log(`[PROCESS-COLORS] Processing value:`, {
-    type: typeof value,
-    value: value,
-  });
-
   try {
     // Handle null/undefined
     if (value === null || value === undefined) {
@@ -1509,13 +1378,11 @@ const processColors = (value: any): any => {
     if (typeof value === "string") {
       // Handle hex colors
       if (value.startsWith("#")) {
-        console.log(`[PROCESS-COLORS] Converting hex color to Color object: ${value}`);
         return { value, format: "hex" as ColorFormat };
       }
 
       // Handle RGB/RGBA colors
       if (value.match(/rgba?\(/)) {
-        console.log(`[PROCESS-COLORS] Converting rgb(a) color to Color object: ${value}`);
         return {
           value,
           format: value.startsWith("rgba") ? ("rgba" as ColorFormat) : ("rgb" as ColorFormat),
@@ -1524,7 +1391,6 @@ const processColors = (value: any): any => {
 
       // Handle HSL/HSLA colors
       if (value.match(/hsla?\(/)) {
-        console.log(`[PROCESS-COLORS] Converting hsl(a) color to Color object: ${value}`);
         return {
           value,
           format: value.startsWith("hsla") ? ("hsla" as ColorFormat) : ("hsl" as ColorFormat),
@@ -1536,10 +1402,8 @@ const processColors = (value: any): any => {
         typeof value === "string" &&
         (value.includes("gradient(") || value.match(/(?:linear|radial|conic)-gradient\(/))
       ) {
-        console.log(`[PROCESS-COLORS] Converting gradient string to Gradient object: ${value}`);
         try {
           const gradientObj = parseGradientString(value);
-          console.log(`[PROCESS-COLORS] Successfully parsed gradient:`, gradientObj);
           return gradientObj;
         } catch (err) {
           console.error(`[PROCESS-COLORS] Failed to parse gradient string:`, err);
@@ -1550,7 +1414,6 @@ const processColors = (value: any): any => {
 
       // Handle named colors like 'red', 'blue', etc.
       if (CSS.supports("color", value)) {
-        console.log(`[PROCESS-COLORS] Converting named color to Color object: ${value}`);
         return { value, format: "named" as ColorFormat };
       }
 
@@ -1560,13 +1423,11 @@ const processColors = (value: any): any => {
 
     // Case 2: Color object with value and format properties - already processed
     if (typeof value === "object" && value !== null && "value" in value && "format" in value) {
-      console.log(`[PROCESS-COLORS] Already a Color object:`, value);
       return value;
     }
 
     // Case 3: Gradient object - already processed
     if (typeof value === "object" && value !== null && "type" in value && "stops" in value) {
-      console.log(`[PROCESS-COLORS] Already a Gradient object:`, value);
       return value;
     }
 
@@ -1606,7 +1467,6 @@ const parseGradientString = (value: string): Gradient => {
     type = "conic";
   }
 
-  console.log(`[PARSE-GRADIENT] Processing ${type} gradient: ${value}`);
 
   // Extract gradient parameters
   const gradient: Gradient = {
@@ -1685,7 +1545,6 @@ const parseGradientString = (value: string): Gradient => {
     }
   }
 
-  console.log(`[PARSE-GRADIENT] Created gradient object with ${gradient.stops.length} stops:`, gradient);
   return gradient;
 };
 
@@ -1693,14 +1552,12 @@ const parseGradientString = (value: string): Gradient => {
 const applyColorValue = (element: HTMLElement, key: string, value: any): boolean => {
   // Handle Color objects (format: hex, rgb, rgba, hsl, hsla, named)
   if (value && typeof value === "object" && "format" in value && "value" in value) {
-    console.log(`[APPLY-COLOR] Setting ${key} with ${value.format} color: ${value.value}`);
     element.style[key as any] = value.value;
     return true;
   }
 
   // Handle Gradient objects (type: linear, radial, conic)
   if (value && typeof value === "object" && "type" in value && "stops" in value) {
-    console.log(`[APPLY-GRADIENT] Setting ${key} with ${value.type} gradient`);
 
     // Convert Gradient object back to CSS string
     let gradientString = "";
@@ -1736,12 +1593,10 @@ const applyColorValue = (element: HTMLElement, key: string, value: any): boolean
 
 // Update DOM style application to handle RGB color objects
 const updateDOMStyle = (element: HTMLElement, key: string, value: any) => {
-  console.log(`[UPDATE-DOM] Updating ${key} with value:`, value);
 
   try {
     // Special case for transform properties
     if (isTransformProperty(key)) {
-      console.log(`[UPDATE-DOM] Handling transform property ${key}`);
 
       // Get current transforms
       const transform = element.style.transform || "";
@@ -1900,7 +1755,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
           // Get element reference
           const element = elementRef();
           if (!element) {
-            console.log(`[ANIM-DEBUG] No element available for animation ${index}`);
             return;
           }
 
@@ -1920,12 +1774,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
           const evaluatedTo = finalConfig.to;
 
           if (IS_DEBUG_MODE) {
-            console.log("[ANIM-REACTIVE] Evaluating animation config:", {
-              from: evaluatedFrom,
-              to: evaluatedTo,
-              configIndex: index,
-              hasElement: !!element,
-            });
           }
 
           // Validate animation configuration
@@ -1939,7 +1787,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
           const animId = `${testId}-anim-${index}`;
 
           if (IS_DEBUG_MODE) {
-            console.log(`[ANIM-DEBUG] Creating animation ${animId} for element ${testId}`);
           }
 
           // Extract animation properties with evaluated values
@@ -1976,29 +1823,24 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
           if (triggerType === "focus" || (Array.isArray(triggerType) && triggerType.includes("focus"))) {
             // Focus/blur event monitoring
             element.addEventListener("focus", () => {
-              console.log(`[ANIM-FOCUS] Element ${testId} focused`);
               setManualFocused(true);
               // Direct style application for immediate feedback
               if (evaluatedTo) {
                 applyStyles(evaluatedTo, element);
-                console.log(`[ANIM-DIRECT] Applied focus styles directly to ${testId}`);
               }
             });
 
             element.addEventListener("blur", () => {
-              console.log(`[ANIM-FOCUS] Element ${testId} blurred`);
               setManualFocused(false);
               // Reverse animation on blur if needed
               if (reverseOnExit && evaluatedFrom) {
                 applyStyles(evaluatedFrom, element);
-                console.log(`[ANIM-DIRECT] Applied blur styles directly to ${testId}`);
               }
             });
           }
 
           // Setup mount animation trigger
           if (triggerType === "mount" || (Array.isArray(triggerType) && triggerType.includes("mount"))) {
-            console.log(`[ANIM-MOUNT] Setting up mount animation for ${testId}`);
             // Immediately mark as mounted to trigger animation
             setManualMounted(true);
 
@@ -2007,14 +1849,12 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
               // Small delay to ensure the element is fully rendered
               setTimeout(() => {
                 applyStyles(evaluatedTo, element);
-                console.log(`[ANIM-DIRECT] Applied mount styles directly to ${testId}`);
               }, 10);
             }
           }
 
           // Setup inView animation trigger
           if (triggerType === "inView" || (Array.isArray(triggerType) && triggerType.includes("inView"))) {
-            console.log(`[ANIM-INVIEW] Setting up inView animation for ${testId}`);
 
             // Create an IntersectionObserver to monitor visibility
             const observer = new IntersectionObserver(
@@ -2022,16 +1862,13 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
                 const [entry] = entries;
                 const isVisible = entry.isIntersecting;
 
-                console.log(`[ANIM-INVIEW] Element ${testId} visibility: ${isVisible}`);
                 setManualInView(isVisible);
 
                 // Direct style application for immediate feedback
                 if (isVisible && evaluatedTo) {
                   applyStyles(evaluatedTo, element);
-                  console.log(`[ANIM-DIRECT] Applied inView styles directly to ${testId}`);
                 } else if (!isVisible && reverseOnExit && evaluatedFrom) {
                   applyStyles(evaluatedFrom, element);
-                  console.log(`[ANIM-DIRECT] Removed inView styles from ${testId}`);
                 }
 
                 // If "once" option is set, disconnect after becoming visible
@@ -2117,7 +1954,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             const targetElement = e.currentTarget as HTMLElement;
             const targetTestId = targetElement.getAttribute("data-test-id");
 
-            console.log(`[ANIM-EVENT] Direct click event on ${targetTestId || "unknown"}!`);
 
             // CRITICAL FIX: Check if the targetElement has already been processed
             if (!targetTestId) {
@@ -2135,7 +1971,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
 
             // Set a data attribute for debugging
             targetElement.setAttribute("data-click-state", String(newState));
-            console.log(`[ANIM-STATE] Click state for ${targetTestId} set to ${newState}`);
 
             // SPACEX SOLUTION: Direct, immediate action for click animations
             // This is what SpaceX engineers would do - don't rely on complex systems when a direct approach works
@@ -2155,20 +1990,17 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
                 // Determine which style values to apply based on current state
                 targetStyle = newState ? animation.config.to : animation.config.from;
 
-                console.log(`[ANIM-DIRECT] Will apply ${newState ? "active" : "inactive"} style:`, targetStyle);
               }
             });
 
             // SPACEX APPROACH: Apply styles directly to DOM for immediate feedback
             if (targetStyle) {
-              console.log(`[ANIM-DIRECT] Directly applying styles to DOM element`);
               applyStyles(targetStyle, targetElement);
             }
 
             // ARCHITECTURE FIX: Use the unified trigger registry for animation system integration
             const triggerEntry = triggerRegistry.get(targetTestId);
             if (triggerEntry && triggerEntry.triggers.has("click")) {
-              console.log(`[ANIM-TRIGGER] Toggling click state for ${targetTestId} to ${newState}`);
 
               // Set click state in trigger registry (for system consistency)
               triggerEntry.setActive(newState);
@@ -2199,7 +2031,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             ...(onComplete ? { onComplete } : {}),
             // CRITICAL FIX: Add onInterrupt callback for reactive value changes
             onInterrupt: () => {
-              console.log("[ANIM-INTERRUPT] Animation interrupted");
               onInterrupt?.();
             },
             ...options,
@@ -2215,7 +2046,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             const toChanged = JSON.stringify(evaluatedTo) !== JSON.stringify(previousTo);
 
             if (fromChanged || toChanged) {
-              console.log("[ANIM-REACTIVE] Detected reactive change in animation config, calling onInterrupt");
               onInterrupt?.();
 
               // Restart animation with new values
@@ -2261,7 +2091,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             // Get the element directly from elementRef signal to ensure we always have the latest reference
             const animElement = elementRef();
             if (!animElement) {
-              console.log(`[DIAG-DOM] No element reference available yet`);
               return;
             }
 
@@ -2270,28 +2099,18 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             const isActive = result.isActive();
             const state = result.state();
 
-            console.log(`[DIAG-DOM] DOM STYLE UPDATE for ${testId}:`, {
-              value: currentValue,
-              active: isActive,
-              state: state,
-              element: animElement.tagName,
-              currentTransform: animElement.style.transform,
-            });
-
             // CRITICAL FIX: Transform handling
             // We must separate transform collection and application to avoid compounding issues
             const transformsToApply: string[] = [];
 
             // Step 1: Clear previous transform to prevent compounding
             const previousTransform = animElement.style.transform;
-            console.log(`[DIAG-DOM] Previous transform: "${previousTransform}"`);
             animElement.style.transform = "";
 
             // Step 2: Collect all transform values
             Object.entries(currentValue).forEach(([key, value]) => {
               // Skip config property which is not a CSS property
               if (key === "config") {
-                console.log(`[DIAG-DOM] Skipping config property`);
                 return;
               }
 
@@ -2302,12 +2121,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
                 // Get current transform and append new transform
                 const currentTransform = animElement.style.transform || "";
                 animElement.style.transform = `${currentTransform} ${key}(${transformValue})`.trim();
-
-                console.log(
-                  `[DIAG-DOM] Collected transform ${key}(${transformValue}) for ${animElement.getAttribute(
-                    "data-test-id"
-                  )}`
-                );
               } else {
                 // For non-transform properties, apply directly
                 try {
@@ -2316,37 +2129,31 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
                     if (value && typeof value === "object") {
                       // Case 1: Color object with value and format properties (from spring system)
                       if ("value" in value && "format" in value) {
-                        console.log(`[DIAG-DOM] Applying color from Color object: ${value.value}`);
                         // @ts-ignore - Dynamic style property assignment
                         animElement.style[key] = value.value;
                       }
                       // Case 2: RGB object with r,g,b properties
                       else if ("r" in value && "g" in value && "b" in value) {
                         const colorString = rgbToString(value);
-                        console.log(`[DIAG-DOM] Applying color from RGB object: ${colorString}`);
                         // @ts-ignore - Dynamic style property assignment
                         animElement.style[key] = colorString;
                       } else {
-                        console.log(`[DIAG-DOM] Unrecognized color object format:`, value);
                         // Fallback to direct assignment as before
                         // @ts-ignore - Dynamic style property assignment
                         animElement.style[key] = value;
                       }
                     } else {
                       // Standard property, apply directly
-                      console.log(`[DIAG-DOM] Setting style.${key} = ${value}`);
                       // @ts-ignore - Dynamic style property assignment
                       animElement.style[key] = value;
                     }
                   } else {
                     // Standard property, apply directly
-                    console.log(`[DIAG-DOM] Setting style.${key} = ${value}`);
                     // @ts-ignore - Dynamic style property assignment
                     animElement.style[key] = value;
                   }
 
                   // Verify it was actually set
-                  console.log(`[DIAG-DOM] After setting: style.${key} = ${animElement.style[key as any]}`);
                 } catch (err) {
                   console.error(`[DIAG-DOM] Failed to apply style property ${key}:`, err);
                 }
@@ -2356,22 +2163,18 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             // Step 3: Apply transform string to element
             if (transformsToApply.length > 0) {
               const newTransform = transformsToApply.join(" ");
-              console.log(`[DIAG-DOM] Setting transform: "${newTransform}"`);
               animElement.style.transform = newTransform;
 
               // Verify it was actually set
-              console.log(`[DIAG-DOM] After setting: style.transform = "${animElement.style.transform}"`);
 
               // Check if the style took effect visually by logging computed style
               const computedTransform = window.getComputedStyle(animElement).transform;
-              console.log(`[DIAG-DOM] Computed transform: "${computedTransform}"`);
               if (computedTransform === "none" && newTransform !== "") {
                 console.warn(
                   `[DIAG-DOM] ⚠️ Transform not applied in computed style! This indicates a DOM application issue.`
                 );
               }
             } else {
-              console.log(`[DIAG-DOM] No transforms to apply`);
             }
           });
         });
@@ -2383,7 +2186,6 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
       if (!el) return; // Guard against null refs
 
       if (IS_DEBUG_MODE) {
-        console.log("[ANIM-REF] Setting element ref:", el);
       }
 
       // Set the element ref for animations to use
@@ -2392,14 +2194,12 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
       // CRITICAL: Ensure all animations are created after the element is available
       // This forces re-evaluation of all animations with the element available
       setTimeout(() => {
-        console.log("[ANIM-REF] Forcing animation system refresh with element:", el);
 
         // Simply accessing the element triggers reactivity in SolidJS
         // This ensures all animations get properly bound to the element
         if (el && el.tagName) {
           // Touch element property to trigger reactivity
           const dummy = el.tagName;
-          console.log("[ANIM-REF] Element refreshed:", dummy);
         }
       }, 0);
 

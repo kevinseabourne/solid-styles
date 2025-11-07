@@ -151,7 +151,6 @@ export function enhancedStyled(tag: any, options: EnhancedStyledOptions = {}) {
     return (props: any) => {
       // CRITICAL: Animation detection stays identical to preserve spring system
       if (hasAnimationProps(props) || animationDetection.hasSpringAnimations) {
-        console.log("[LIGHTNING] Animation props detected - using current system");
 
         // Use EXISTING animation system - zero changes!
         const MinimalStyledComp = createMinimalComponent(tag, strings, args);
@@ -167,7 +166,6 @@ export function enhancedStyled(tag: any, options: EnhancedStyledOptions = {}) {
       const staticClass = resolvePropsToClass(props);
 
       if (staticClass) {
-        console.log("[LIGHTNING] Using static class:", staticClass);
 
         // Check if we need CSS variables
         if (shouldUseCSSVariables(props, animationDetection)) {
@@ -182,7 +180,6 @@ export function enhancedStyled(tag: any, options: EnhancedStyledOptions = {}) {
 
       // Check if we should use CSS variables for theme
       if (shouldUseCSSVariables(props, animationDetection)) {
-        console.log("[LIGHTNING] Using CSS variables for theme");
 
         // Generate base class with CSS variables
         const baseClass = css(
@@ -197,7 +194,6 @@ export function enhancedStyled(tag: any, options: EnhancedStyledOptions = {}) {
       }
 
       // Fallback: Use current BauCSS system
-      console.log("[LIGHTNING] Using current BauCSS system");
       return createMinimalComponent(tag, strings, args)(props);
     };
   };

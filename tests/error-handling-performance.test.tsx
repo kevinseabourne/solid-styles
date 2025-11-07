@@ -591,7 +591,7 @@ describe("Performance Utilities", () => {
 
   describe("Performance in Components", () => {
     it("should monitor styled component render performance", () => {
-      const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      let monitorDuration: number | undefined;
 
       const PerfStyled = styled("div")`
         padding: 20px;
@@ -602,20 +602,17 @@ describe("Performance Utilities", () => {
           for (let i = 0; i < 1000; i++) {
             sum += i;
           }
-          monitor.end();
+          monitorDuration = monitor.end();
           return "blue";
         }};
       `;
 
       render(() => <PerfStyled>Performance Test</PerfStyled>);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("[Performance] StyleCalculation:"),
-        expect.any(Number),
-        "ms"
-      );
-
-      consoleSpy.mockRestore();
+      // Verify that performance monitoring actually measured time
+      expect(monitorDuration).toBeDefined();
+      expect(typeof monitorDuration).toBe("number");
+      expect(monitorDuration).toBeGreaterThanOrEqual(0);
     });
 
     it("should debounce style recalculations", () => {

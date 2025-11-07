@@ -54,7 +54,6 @@ const springPresets = {
 // Enable animation diagnostics
 onMount(() => {
   runAnimationDiagnostics();
-  console.log("[ANIM-SYSTEM] Animation diagnostics enabled");
 });
 
 // ==============================

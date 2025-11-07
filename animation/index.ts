@@ -28,3 +28,18 @@ export {
 
 // Export advanced animation features
 export * from './advanced';
+
+// Export layout animation features
+export {
+  LayoutAnimationEngine,
+  createLayoutAnimation,
+  useLayoutAnimation,
+  type LayoutTransitionConfig
+} from './layout-engine';
+
+export {
+  LayoutAnimated,
+  LayoutTransitionProvider,
+  layoutAnimation,
+  type LayoutAnimatedProps
+} from './layout-components';

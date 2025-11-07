@@ -1,6 +1,6 @@
 {
   "name": "solid-styles",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "description": "Zero-runtime styled components for SolidJS with Lightning CSS optimization and spring animations. Production-ready CSS-in-JS with 100% test coverage.",
   "keywords": [
     "solidjs",
@@ -31,36 +31,37 @@
     "registry": "https://registry.npmjs.org/"
   },
   "type": "module",
-  "main": "./dist/src/index.ts",
-  "module": "./dist/src/index.ts",
-  "types": "./dist/types/src/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "bin": {
     "solid-styles": "./scripts/setup.js"
   },
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
-      "solid": "./dist/src/index.ts",
-      "import": "./dist/src/index.ts",
-      "require": "./dist/src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     },
     "./animation": {
-      "types": "./dist/types/animation/index.d.ts",
-      "solid": "./dist/animation/index.ts",
-      "import": "./dist/animation/index.ts",
-      "require": "./dist/animation/index.ts"
+      "types": "./dist/animation.d.ts",
+      "import": "./dist/animation.js",
+      "require": "./dist/animation.cjs"
     },
     "./utils/spring": {
-      "types": "./dist/types/utils/spring.d.ts",
-      "solid": "./dist/utils/spring.ts",
-      "import": "./dist/utils/spring.ts",
-      "require": "./dist/utils/spring.ts"
+      "types": "./dist/utils/spring.d.ts",
+      "import": "./dist/utils/spring.js",
+      "require": "./dist/utils/spring.cjs"
     },
     "./utils/gradient": {
-      "types": "./dist/types/utils/gradient.d.ts",
-      "solid": "./dist/utils/gradient.ts",
-      "import": "./dist/utils/gradient.ts",
-      "require": "./dist/utils/gradient.ts"
+      "types": "./dist/utils/gradient.d.ts",
+      "import": "./dist/utils/gradient.js",
+      "require": "./dist/utils/gradient.cjs"
+    },
+    "./integrations/astro": {
+      "types": "./dist/integrations/astro.d.ts",
+      "import": "./dist/integrations/astro.js",
+      "require": "./dist/integrations/astro.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -74,7 +75,9 @@
   "scripts": {
     "setup": "node scripts/setup.js",
     "postinstall": "node scripts/auto-setup.js || true",
-    "build": "mkdir -p dist && cp -r src animation utils lightning scripts dist/ && cp lightning-setup.ts README.md LICENSE dist/ 2>/dev/null || true",
+    "build": "NODE_ENV=production tsup && node scripts/post-build.js",
+    "build:dev": "tsup && node scripts/post-build.js",
+    "build:old": "mkdir -p dist && cp -r src animation utils lightning scripts dist/ && cp lightning-setup.ts README.md LICENSE dist/ 2>/dev/null || true",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "vitest",
     "test:ssr": "vitest run --config vitest.config.ssr.ts",
@@ -114,9 +117,10 @@
     "@types/node": "^22.16.1",
     "@typescript-eslint/eslint-plugin": "^8.36.0",
     "@typescript-eslint/parser": "^8.36.0",
-    "@vitest/browser": "^3.2.4",
-    "@vitest/coverage-v8": "3.2.4",
-    "@vitest/ui": "3.2.4",
+    "@vitest/browser": "^4.0.8",
+    "@vitest/browser-playwright": "^4.0.8",
+    "@vitest/coverage-v8": "^4.0.8",
+    "@vitest/ui": "^4.0.8",
     "browserslist": "^4.25.1",
     "esbuild": "^0.19.12",
     "eslint": "^8.57.1",
@@ -129,35 +133,44 @@
     "prettier": "^3.6.2",
     "size-limit": "^11.2.0",
     "solid-js": "^1.9.7",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3",
     "vinxi": "^0.4.3",
     "vite": "5.3.5",
     "vite-plugin-solid": "2.11.6",
-    "vitest": "3.2.4"
+    "vitest": "^4.0.8"
   },
   "size-limit": [
     {
       "name": "Core Library",
-      "path": "./dist/src/index.ts",
-      "limit": "25 KB"
+      "path": "./dist/index.js",
+      "limit": "190 KB"
     },
     {
       "name": "Animation System",
-      "path": "./dist/animation/index.ts",
-      "limit": "27 KB"
+      "path": "./dist/animation.js",
+      "limit": "200 KB"
     },
     {
       "name": "Spring Utilities",
-      "path": "./dist/utils/spring.ts",
-      "limit": "13 KB"
+      "path": "./dist/utils/spring.js",
+      "limit": "90 KB"
     },
     {
       "name": "Gradient Utilities",
-      "path": "./dist/utils/gradient-numerical.ts",
-      "limit": "5 KB"
+      "path": "./dist/utils/gradient.js",
+      "limit": "25 KB"
     }
   ],
   "engines": {
     "node": ">=16.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "happy-dom": ">=20.0.2",
+      "playwright": ">=1.55.1",
+      "vite": "^7.2.2",
+      "esbuild": ">=0.25.0"
+    }
   }
 }

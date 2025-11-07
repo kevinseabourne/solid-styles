@@ -24,7 +24,8 @@
     "lightning/**/*",
     "hooks/**/*",
     "lightning-setup.ts",
-    "types/**/*"
+    "types/**/*",
+    "types/import-meta.d.ts"
   ],
   "exclude": [
     "node_modules",

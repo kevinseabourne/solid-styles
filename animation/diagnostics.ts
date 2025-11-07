@@ -14,7 +14,6 @@ let diagnosticsEnabled = false;
  */
 export function enableAnimationDiagnostics(): void {
   diagnosticsEnabled = true;
-  console.log("[ANIM-DIAG] Animation diagnostics enabled");
 }
 
 /**
@@ -22,7 +21,6 @@ export function enableAnimationDiagnostics(): void {
  */
 export function disableAnimationDiagnostics(): void {
   diagnosticsEnabled = false;
-  console.log("[ANIM-DIAG] Animation diagnostics disabled");
 }
 
 /**
@@ -39,7 +37,6 @@ export function registerAnimation(id: string, instance: any): void {
   if (!diagnosticsEnabled) return;
   
   animationRegistry.set(id, instance);
-  console.log(`[ANIM-DIAG] Registered animation: ${id}`, instance);
 }
 
 /**
@@ -50,7 +47,6 @@ export function unregisterAnimation(id: string): void {
   
   if (animationRegistry.has(id)) {
     animationRegistry.delete(id);
-    console.log(`[ANIM-DIAG] Unregistered animation: ${id}`);
   }
 }
 
@@ -60,7 +56,6 @@ export function unregisterAnimation(id: string): void {
 export function logAnimationEvent(id: string, event: string, data?: any): void {
   if (!diagnosticsEnabled) return;
   
-  console.log(`[ANIM-DIAG] [${id}] ${event}`, data);
 }
 
 /**
@@ -76,34 +71,24 @@ export function getRegisteredAnimations(): Map<string, any> {
 export function runAnimationDiagnostics(): void {
   console.group("[ANIM-DIAG] Animation System Diagnostics");
   
-  console.log("Animation diagnostics enabled:", diagnosticsEnabled);
-  console.log("Registered animations:", animationRegistry.size);
   
   animationRegistry.forEach((instance, id) => {
     console.group(`Animation: ${id}`);
-    console.log("Instance:", instance);
     
     // Check for state
     if (instance.state) {
-      console.log("State:", typeof instance.state === 'function' ? instance.state() : instance.state);
     }
     
     // Check for value
     if (instance.value) {
-      console.log("Value:", typeof instance.value === 'function' ? instance.value() : instance.value);
     }
     
     // Check for target element
     if (instance.element) {
-      console.log("Element:", instance.element);
       
       // Check computed styles
       if (instance.element instanceof HTMLElement) {
         const styles = window.getComputedStyle(instance.element);
-        console.log("Computed styles:", {
-          transform: styles.transform,
-          transition: styles.transition,
-        });
       }
     }
     
