@@ -1,11 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly MODE?: string;
   readonly ENABLE_DEBUG_LOGGING?: string;
-  // Add more env variables as needed
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
+  // Add more custom env variables as needed
+  // Note: MODE is already defined by Vite's types as required string
 }
