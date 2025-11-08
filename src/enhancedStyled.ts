@@ -6,23 +6,21 @@
  * without requiring explicit wrapping.
  */
 
-import { Component, JSX, createComponent, mergeProps, splitProps } from "solid-js";
+import { Component, createComponent, mergeProps, splitProps } from "solid-js";
 import { Dynamic } from "solid-js/web";
 
 // Import from the actual index.ts exports
 import { css } from "./index";
 
-// Import animation types without creating circular dependencies
-// We'll use type-only imports to avoid runtime circular dependencies
-import type { AnimateConfig } from "../animation/animatedStyled";
-
 // Define cached values directly here to avoid circular dependencies
-const cache = new Map<string, Component<any>>();
-const isHTMLTag = (tag: any): boolean => typeof tag === "string";
+const cache = new Map<string, Component<Record<string, unknown>>>();
+const isHTMLTag = (tag: unknown): boolean => typeof tag === "string";
 
 // Function to check if a prop object contains animation-related properties
-function hasAnimationProps(props: any): boolean {
-  return props && (props.animate !== undefined || props.motion !== undefined || props.transition !== undefined);
+function hasAnimationProps(props: unknown): boolean {
+  if (!props || typeof props !== 'object') return false;
+  const p = props as Record<string, unknown>;
+  return p.animate !== undefined || p.motion !== undefined || p.transition !== undefined;
 }
 
 // Type for template literal arguments

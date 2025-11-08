@@ -73,3 +73,10 @@ benchmark-results.json
 # Internal documentation (not for public repo)
 .dev-docs/
 *.bak*
+
+# Debug and temporary development files
+animation-fix.js
+debug-context.tsx
+animation/debug-example.tsx
+animation/debug-tools.tsx
+src/test-attribute-sync.ts

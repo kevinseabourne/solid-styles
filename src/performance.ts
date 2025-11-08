@@ -563,8 +563,7 @@ performanceMonitor = function (name: string = "Unnamed", opts?: { threshold?: nu
         );
       }
 
-      if (process.env.NODE_ENV !== "production") {
-      }
+      // Duration recorded
 
       return duration;
     },

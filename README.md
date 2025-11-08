@@ -84,7 +84,7 @@ npx solid-styles setup
 ```
 
 **What it does:**
-- 🔍 **Auto-detects your project**: Solid.js vs SolidStart
+- 🔍 **Auto-detects your project**: Solid.js, SolidStart, Astro + Solid.js, or Tauri + Solid.js
 - 🔍 **Auto-detects your language**: JavaScript vs TypeScript
 - 🔍 **Auto-detects your bundler**: Vite vs Vinxi
 - 📁 **Creates theme files**: `theme.js` or `theme.ts` with proper typing
@@ -106,6 +106,21 @@ npx solid-styles setup
 🔍 Detected: SolidStart project using vinxi with TypeScript
 ✅ Theme file: ./src/theme.ts → import { theme } from "./src/theme"
 ✅ Global styles: ./src/app.css → import "./src/app.css"
+```
+
+#### For Astro + Solid.js:
+```bash
+🔍 Detected: Astro with Solid.js using vite
+✅ Theme file: ./src/theme.ts → import { theme } from "./src/theme"
+✅ Global styles: ./src/index.css → import "./src/index.css"
+✅ Lightning CSS plugin configured for Astro integration
+```
+
+#### For Tauri + Solid.js:
+```bash
+🔍 Detected: Tauri with Solid.js using vite
+✅ Theme file: ./src/theme.ts → import { theme } from "./src/theme"
+✅ Global styles: ./src/index.css → import "./src/index.css"
 ```
 
 ### Package Manager Support
@@ -183,12 +198,14 @@ src/
 
 ### 🚀 Framework Support
 
-**Works identically with both frameworks:**
+**Works seamlessly with all these frameworks:**
 
-| Framework      | Entry File      | Build Tool | Status             |
-| -------------- | --------------- | ---------- | ------------------ |
-| **Solid.js**   | `src/index.tsx` | Vite       | ✅ Auto-configured |
-| **SolidStart** | `src/app.tsx`   | Vinxi      | ✅ Auto-configured |
+| Framework           | Entry File      | Build Tool | Status             |
+| ------------------- | --------------- | ---------- | ------------------ |
+| **Solid.js**        | `src/index.tsx` | Vite       | ✅ Auto-configured |
+| **SolidStart**      | `src/app.tsx`   | Vinxi      | ✅ Auto-configured |
+| **Astro + Solid**   | `src/index.tsx` | Vite       | ✅ Auto-configured |
+| **Tauri + Solid**   | `src/index.tsx` | Vite       | ✅ Auto-configured |
 
 ### 🎯 Complete Theme System Features
 
@@ -899,16 +916,61 @@ const { transformStyles, isDragging } = useGestures(ref, { gestures: { drag: tru
 
 Framer Motion-style layout animations for SolidJS. Automatically animate size and position changes when elements mount/unmount or when content changes.
 
-- Component: `LayoutAnimated`
-- Hook: `useLayoutAnimation`
-- Directive: `layoutAnimation`
-- Global config provider: `LayoutTransitionProvider`
+### Three Ways to Use Layout Animations
 
-### Quick Start
+#### 1. **Directive** (Recommended - Most Flexible)
+
+Add layout animations directly to any element:
+
+```tsx
+import { createSignal } from "solid-js";
+
+function ExpandableCard() {
+  const [expanded, setExpanded] = createSignal(false);
+  return (
+    <div use:layoutAnimation={{ stiffness: 400, damping: 30 }}>
+      <button onClick={() => setExpanded(!expanded())}>Toggle</button>
+      {expanded() && <div>Extra content</div>}
+    </div>
+  );
+}
+
+// Or with styled components
+const Card = styled.div`
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+`;
+
+<Card use:layoutAnimation={true}>Content</Card>
+```
+
+#### 2. **Hook** (Direct Control)
+
+For more control, use the hook directly:
+
+```tsx
+import { useLayoutAnimation } from "solid-styles/animation";
+
+function ExpandableCard() {
+  const [expanded, setExpanded] = createSignal(false);
+  const layoutRef = useLayoutAnimation({ stiffness: 400, damping: 30 });
+  
+  return (
+    <div ref={layoutRef}>
+      <button onClick={() => setExpanded(!expanded())}>Toggle</button>
+      {expanded() && <div>Extra content</div>}
+    </div>
+  );
+}
+```
+
+#### 3. **Component** (Wrapper Approach)
+
+Use the `LayoutAnimated` component wrapper:
 
 ```tsx
 import { LayoutAnimated } from "solid-styles/animation";
-import { createSignal } from "solid-js";
 
 function ExpandableCard() {
   const [expanded, setExpanded] = createSignal(false);
@@ -919,27 +981,23 @@ function ExpandableCard() {
     </LayoutAnimated>
   );
 }
-```
 
-Polymorphic rendering is supported via the `as` prop (works with intrinsic tags and styled components):
-
-```tsx
-import { styled } from "solid-styles";
+// Polymorphic rendering with styled components
 const Card = styled.div`
   background: white;
   border-radius: 8px;
   padding: 20px;
 `;
 
-<LayoutAnimated as={Card} layout>Content</LayoutAnimated>;
+<LayoutAnimated as={Card} layout>Content</LayoutAnimated>
 ```
 
-### API Overview
+### API Summary
 
-- `LayoutAnimated` — wrapper that adds layout animations to any element; accepts `as`, `layout` (boolean), and `layoutTransition` (spring config and toggles like `animateWidth`, `animateHeight`, `animatePosition`, `useTransform`).
-- `useLayoutAnimation(config?)` — returns a ref callback; attach to any element to enable layout animations without a wrapper.
-- `layoutAnimation` directive — `<div use:layoutAnimation={true}>` or provide a config object.
-- `LayoutTransitionProvider` — set global defaults once; local `layoutTransition` values override globals.
+- **`use:layoutAnimation`** — Directive for adding layout animations to any element
+- **`useLayoutAnimation(config?)`** — Hook that returns a ref callback
+- **`LayoutAnimated`** — Wrapper component with `layout` prop and polymorphic `as` support
+- **`LayoutTransitionProvider`** — Global config provider (config can be overridden locally)
 
 ### Global Configuration
 

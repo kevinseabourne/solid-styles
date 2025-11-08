@@ -105,8 +105,7 @@ export function setup(
   // Initialize Lightning CSS runtime
   if (!isServer) {
     initializeLightningRuntime();
-    if (process.env.NODE_ENV === "development") {
-    }
+    // Runtime initialized
   }
 
   // Initialize Lightning CSS integration if available
@@ -121,8 +120,7 @@ export function setup(
         const config = (window as any).__LIGHTNING_CSS_CONFIG__;
         if (config.resolver) {
           // Use the resolver to map props to classes
-          if (process.env.NODE_ENV === "development") {
-          }
+          // Resolver loaded
         }
       }
 
@@ -130,12 +128,10 @@ export function setup(
       if (enhanceMakeStyled) {
         const mockMakeStyled = () => styled;
         enhancedMakeStyled = enhanceMakeStyled(mockMakeStyled);
-        if (process.env.NODE_ENV === "development") {
-        }
+        // Enhanced styled created
       }
 
-      if (process.env.NODE_ENV === "development") {
-      }
+      // Lightning CSS integration enabled
     }
   } catch (error) {
     if (process.env.NODE_ENV !== "test") {
@@ -143,8 +139,7 @@ export function setup(
     }
   }
 
-  if (process.env.NODE_ENV === "development") {
-  }
+  // Setup complete
 }
 
 // Simple hash function for SSR - must match bau-css hash logic
@@ -169,7 +164,7 @@ const safeArg = (arg: CssArg, props?: any): string | number => {
     try {
       // CRITICAL FIX: Detect if the function requires props by checking its parameter count
       // If props are not available (template compilation phase), skip execution for prop-dependent functions
-      const func = arg as Function;
+      const func = arg as (...args: unknown[]) => unknown;
       const funcString = func.toString();
       const requiresProps = func.length > 0 ||
                            funcString.includes('props.') || 
@@ -518,7 +513,7 @@ if (!isServer) {
 
       const generateRule = (cls: string) => `.${cls} { ${cssString} }`;
 
-      // @ts-ignore
+      // import.meta is not available in all environments
       const IS_DEV = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development';
       if (IS_DEV) {
         // If the rule contains nested selectors or at-rules that JSDOM will choke on,
@@ -579,7 +574,7 @@ if (!isServer) {
       if (!isServer && !document.getElementById(styleId)) {
         styleEl = document.createElement("style");
         styleEl.id = styleId;
-        // @ts-ignore
+        // import.meta is not available in all environments
         const IS_TEST_ENV = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
 
         let aggregatedKeyframes = "";
@@ -639,7 +634,7 @@ if (!isServer) {
         varNames.forEach((varName, i) => {
           const arg = args[i];
           if (typeof arg === 'function') {
-            const value = (arg as Function)(props);
+            const value = (arg as (props: unknown) => unknown)(props);
             document.documentElement.style.setProperty(varName, String(value));
           }
         });
@@ -650,7 +645,7 @@ if (!isServer) {
         varNames.forEach((varName, i) => {
           const arg = args[i];
           if (typeof arg === 'function') {
-            const value = (arg as Function)(props);
+            const value = (arg as (props: unknown) => unknown)(props);
             document.documentElement.style.setProperty(varName, String(value));
           }
         });
@@ -761,7 +756,7 @@ if (!isServer) {
       styleEl = document.createElement("style");
       styleEl.id = styleId;
 
-      // @ts-ignore
+      // import.meta is not available in all environments
       const IS_TEST_ENV = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
 
       let aggregatedKeyframes = "";
@@ -912,15 +907,13 @@ const loadAnimationSystem = async () => {
   
   try {
     isAnimationSystemLoading = true;
-    if (process.env.NODE_ENV === 'development') {
-    }
+    // Loading animation system
     
     // Dynamic import for code splitting
     const { animated } = await import('../animation/animatedStyled');
     animationSystemCache.animated = animated;
     
-    if (process.env.NODE_ENV === 'development') {
-    }
+    // Animation system loaded
     
     return animated;
   } catch (error) {
@@ -962,7 +955,7 @@ const createBaseStyledComponent = (tag: any, strings: TemplateStringsArray, args
   }
   
   // Create the base styled component
-  const BaseStyledComponent = (props: any) => {
+    const BaseStyledComponent = (props: any) => {
     // Split out the props that Solid Styles handles internally.
     const [local, rest] = splitProps(props, ["as", "class", "className", "style", "ref"]);
 
@@ -971,15 +964,13 @@ const createBaseStyledComponent = (tag: any, strings: TemplateStringsArray, args
 
     // --- Class Name and Style Generation ---
     // Only log in development mode, not in tests
-    if (process.env.NODE_ENV === "development") {
-    }
+    // Processing styles
 
     let staticClassName: string | null = null;
     try {
       staticClassName = resolvePropsToClass(rest);
-      if (process.env.NODE_ENV === "development") {
-      }
-    } catch (error) {
+      // Static class resolved
+    } catch (error: unknown) {
       if (process.env.NODE_ENV === "development") {
         console.error("[LIGHTNING-CSS] Error resolving static class:", error);
       }
@@ -990,9 +981,6 @@ const createBaseStyledComponent = (tag: any, strings: TemplateStringsArray, args
       const arg = args[index];
       return result + string + (arg !== undefined ? String(arg) : "");
     }, "");
-
-    if (process.env.NODE_ENV === "development") {
-    }
 
     // Create the final className
     const finalClassName = [staticClassName, local.class, local.className]
@@ -1052,22 +1040,18 @@ function styled(tag: any) {
 
       // --- Class Name and Style Generation ---
       // Only log in development mode, not in tests
-      if (process.env.NODE_ENV === "development") {
-      }
+      // Processing styles
 
       let staticClassName: string | null = null;
       try {
         staticClassName = resolvePropsToClass(rest);
-        if (process.env.NODE_ENV === "development") {
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === "development") {
-        }
+        // Static class resolved
+      } catch {
+        // Error resolving static class, falling back to css()
       }
 
-      const rawClassName = staticClassName ?? css(strings, ...args);
-      if (process.env.NODE_ENV === "development") {
-      }
+    const rawClassName = staticClassName ?? css(strings, ...args);
+    // Class name generated
 
       // Tests for the enhanced API expect Styled Components' class names to start with `sc-`.
       // We therefore expose a *public* class name with that prefix while keeping the raw class
@@ -1077,15 +1061,13 @@ function styled(tag: any) {
 
       let cssVariables: Record<string, string> = {};
       if (!staticClassName) {
-        try {
-          const cssVariableManager = getCSSVariableManager();
-          cssVariables = cssVariableManager.generateComponentVariables(key, rest);
-          if (process.env.NODE_ENV === "development") {
-          }
-        } catch (error) {
-          if (process.env.NODE_ENV === "development") {
-          }
-        }
+      try {
+        const cssVariableManager = getCSSVariableManager();
+        cssVariables = cssVariableManager.generateComponentVariables(key, rest);
+        // CSS variables generated
+      } catch (error) {
+        // Error generating CSS variables
+      }
       }
 
       // --- Prop Merging ---
@@ -1096,15 +1078,13 @@ function styled(tag: any) {
       // Create a ref handler that applies CSS variables and calls the user's ref.
       const handleRef = (el: HTMLElement) => {
         if (el && Object.keys(cssVariables).length > 0) {
-          try {
-            const cssVariableManager = getCSSVariableManager();
-            cssVariableManager.applyCSSVariables(el, cssVariables);
-            if (process.env.NODE_ENV === "development") {
-            }
-          } catch (error) {
-            if (process.env.NODE_ENV === "development") {
-            }
-          }
+        try {
+          const cssVariableManager = getCSSVariableManager();
+          cssVariableManager.applyCSSVariables(el, cssVariables);
+          // CSS variables applied
+        } catch (error) {
+          // Error applying CSS variables
+        }
         }
         if (typeof local.ref === "function") local.ref(el);
       };

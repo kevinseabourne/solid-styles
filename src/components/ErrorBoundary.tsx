@@ -1,4 +1,4 @@
-import { Component, JSX, createSignal, Show, For, ErrorBoundary as SolidErrorBoundary } from "solid-js";
+import { Component, JSX, createSignal, Show, ErrorBoundary as SolidErrorBoundary } from "solid-js";
 import { errorHandler, ErrorType, ErrorSeverity } from "../error-handling";
 import { styled } from "../index";
 
@@ -8,11 +8,6 @@ interface ErrorBoundaryProps {
   onError?: (error: Error) => void;
   isolate?: boolean;
   showDetails?: boolean;
-}
-
-interface ErrorInfo {
-  componentStack: string;
-  timestamp: Date;
 }
 
 // Styled components for error display
@@ -103,10 +98,7 @@ export const ErrorBoundary: Component<ErrorBoundaryProps> = (props) => {
         // Call custom error handler if provided
         props.onError?.(error);
 
-        // In development, also log to console
-        if (process.env.NODE_ENV === "development") {
-          console.error("Error caught by ErrorBoundary:", error);
-        }
+        // Error logged to handler
 
         // Use custom fallback if provided
         if (props.fallback) {
@@ -246,18 +238,18 @@ export const StyleErrorBoundary: Component<{
 };
 
 // Export convenience wrapper for styled components with error boundaries
-export function withErrorBoundary<T extends Component<any>>(
-  Component: T,
+export function withErrorBoundary<T extends Component<Record<string, unknown>>>(
+  WrappedComponent: T,
   options?: {
     fallback?: (error: Error, reset: () => void) => JSX.Element;
     onError?: (error: Error) => void;
     isolate?: boolean;
   }
 ): T {
-  return ((props: any) => (
+  return ((props: Record<string, unknown>) => (
     <ErrorBoundary
       {...options}
-      children={<Component {...props} />}
+      children={<WrappedComponent {...props} />}
     />
   )) as T;
 }
