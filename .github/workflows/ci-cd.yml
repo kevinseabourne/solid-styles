@@ -49,7 +49,7 @@ jobs:
         run: pnpm run type-check
 
       - name: Run tests
-        run: pnpm test -- --coverage --reporter=verbose
+        run: pnpm run test:coverage
 
       - name: Run build
         run: pnpm run build
