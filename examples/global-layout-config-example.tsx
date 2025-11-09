@@ -146,18 +146,16 @@ render(
 */
 
 // Now anywhere in your app, just use layout={true}:
-/*
-function MyComponent() {
-  const [expanded, setExpanded] = createSignal(false);
-  
-  return (
-    <LayoutAnimated layout>  {/* Uses global config automatically! */}
-      <button onClick={() => setExpanded(!expanded())}>Toggle</button>
-      {expanded() && <div>Content</div>}
-    </LayoutAnimated>
-  );
-}
-*/
+// function MyComponent() {
+//   const [expanded, setExpanded] = createSignal(false);
+//   
+//   return (
+//     <LayoutAnimated layout>  // Uses global config automatically!
+//       <button onClick={() => setExpanded(!expanded())}>Toggle</button>
+//       {expanded() && <div>Content</div>}
+//     </LayoutAnimated>
+//   );
+// }
 
 // ============================================================================
 // DIFFERENT SPRING PRESETS
