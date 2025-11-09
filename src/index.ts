@@ -73,7 +73,27 @@ let propertyFilter: ((props: Record<string, any>) => Record<string, any>) | null
 // Default prop filter used in tests – remove custom design-system props so they don't show up as
 // invalid attributes in the rendered DOM.  Consumers can override by calling `setup()` with their
 // own filter function.
-const DEFAULT_FILTER_KEYS = new Set(["variant", "isLoading"]);
+const DEFAULT_FILTER_KEYS = new Set([
+  "variant", 
+  "isLoading",
+  // Animation props (auto-detected and handled by animated() wrapper)
+  "animate",
+  "motion",
+  "transition",
+  "initial",
+  "exit",
+  "variants",
+  "animate:hover",
+  "animate:focus",
+  "animate:click",
+  "animate:inView",
+  "whileHover",
+  "whileTap",
+  "whileFocus",
+  "whileInView",
+  "reducedMotionTransition",
+  "hardware",
+]);
 
 propertyFilter = (props: Record<string, any>) => {
   const filtered: Record<string, any> = {};
@@ -1025,13 +1045,44 @@ function styled(tag: any) {
     }
 
     // ======= CREATE STANDARD STYLED COMPONENT =======
-    // Always load animation system for potential future use
-    loadAnimationSystem();
+    // Preload animation system asynchronously for potential future use
+    // This happens once per styled component definition, not per render
+    if (!isServer) {
+      loadAnimationSystem();
+    }
     
     // ======= STANDARD STYLED COMPONENT =======
     const StyledComponent = (props: any) => {
+      // ======= AUTOMATIC ANIMATION DETECTION =======
+      // Skip animation detection on server-side
+      if (!isServer && hasAnimationProps(props)) {
+        // Animation props detected - check if animation system is loaded
+        const animatedWrapper = animationSystemCache.animated;
+        
+        if (animatedWrapper) {
+          // Animation system is loaded - use animated wrapper
+          // Create a base styled component without recursion
+          const BaseComponent = createBaseStyledComponent(tag, strings, args);
+          // Wrap it with animated() HOC
+          const AnimatedComponent = animatedWrapper(BaseComponent);
+          // Render with all props (animated will handle animation props)
+          return createComponent(AnimatedComponent, props);
+        } else {
+          // Animation system not loaded yet - render without animations for now
+          // The loadAnimationSystem() call above will load it for next render
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(
+              '[SOLID-STYLES] Animation props detected but animation system not loaded yet. ' +
+              'Animations will be available on next render. ' +
+              'To avoid this warning, import animation system explicitly: ' +
+              'import "solid-styles/animation";'
+            );
+          }
+          // Fall through to standard rendering
+        }
+      }
       
-      // ======= STANDARD STYLED COMPONENT PATH =======
+      // ======= STANDARD STYLED COMPONENT PATH (No Animations) =======
       // Split out the props that Solid Styles handles internally.
       const [local, rest] = splitProps(props, ["as", "class", "className", "style", "ref"]);
 

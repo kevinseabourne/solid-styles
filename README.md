@@ -486,6 +486,10 @@ The advanced animation system provides a comprehensive, declarative API for crea
 
 **Just use animation props directly on any styled component** - automatic detection handles everything:
 
+> **How it works:** Solid Styles automatically detects when you use animation props like `animate`, `whileHover`, `whileTap`, etc. on a styled component. When detected, it dynamically loads and applies the animation system behind the scenes. This means you get the performance benefits of code-splitting (animation system only loads when needed) while keeping your code simple and declarative.
+>
+> **No imports needed!** You don't need to import `animated()` or wrap your components. Just add animation props and they work automatically.
+
 ```tsx
 // Create regular styled components
 const Button = styled.button`
