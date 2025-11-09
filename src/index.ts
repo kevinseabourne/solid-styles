@@ -859,6 +859,12 @@ export { enhanced } from "./enhancedStyled";
 const cache = new Map<string, Component<any>>();
 
 /**
+ * Separate cache for base components (without animation detection)
+ * Used when wrapping with animated() to avoid recursion
+ */
+const baseComponentCache = new Map<string, Component<any>>();
+
+/**
  * Enhanced function to check if a prop object contains animation-related properties
  * This allows automatic detection of animation needs at runtime
  * Supports all animation prop patterns including hover, focus, and interaction states
@@ -966,10 +972,10 @@ const isAnimatedComponent = (component: any): boolean => {
  */
 const createBaseStyledComponent = (tag: any, strings: TemplateStringsArray, args: CssArg[]) => {
   // Generate a key for this styled component
-  const key = typeof tag === "string" ? tag + strings.join("").trim() : strings.join("").trim();
+  const key = typeof tag === "string" ? tag + "__BASE__" + strings.join("").trim() : "__BASE__" + strings.join("").trim();
   
-  // Check cache first
-  const cachedComponent = cache.get(key);
+  // Check base component cache first (separate from regular cache)
+  const cachedComponent = baseComponentCache.get(key);
   if (cachedComponent) {
     return cachedComponent;
   }
@@ -1022,11 +1028,10 @@ const createBaseStyledComponent = (tag: any, strings: TemplateStringsArray, args
     });
   };
   
-  // Cache the component
-  cache.set(key, BaseStyledComponent);
+  // Cache in base component cache (separate from main cache to avoid recursion)
+  baseComponentCache.set(key, BaseStyledComponent);
   return BaseStyledComponent;
 };
-
 /**
  * Creates a styled component with Lightning CSS optimization and automatic animation detection
  *
@@ -1060,12 +1065,11 @@ function styled(tag: any) {
         const animatedWrapper = animationSystemCache.animated;
         
         if (animatedWrapper) {
-          // Animation system is loaded - use animated wrapper
-          // Create a base styled component without recursion
+          // Animation system is loaded - create animated version
+          // Use the base styled component rendering logic directly
           const BaseComponent = createBaseStyledComponent(tag, strings, args);
-          // Wrap it with animated() HOC
           const AnimatedComponent = animatedWrapper(BaseComponent);
-          // Render with all props (animated will handle animation props)
+          // Render with all props (animated() will handle animation props)
           return createComponent(AnimatedComponent, props);
         } else {
           // Animation system not loaded yet - render without animations for now
