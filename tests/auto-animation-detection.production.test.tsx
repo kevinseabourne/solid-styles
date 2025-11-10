@@ -505,7 +505,7 @@ describe('Production-Grade: Automatic Animation Detection', () => {
   });
 
   describe('Concurrent Rendering', () => {
-    it('should handle multiple components with different animation props rendering concurrently', async () => {
+    it('should handle concurrent multi-component animations', async () => {
       const Box1 = styled.div`color: red;`;
       const Box2 = styled.div`color: blue;`;
       const Box3 = styled.div`color: green;`;
@@ -543,7 +543,7 @@ describe('Production-Grade: Automatic Animation Detection', () => {
       expect(screen.getByTestId('box3')).toBeInTheDocument();
     });
 
-    it('should handle animation prop changes during parent re-render', async () => {
+    it('should handle prop changes during parent re-render', async () => {
       const Child = styled.div`padding: 10px;`;
 
       function TestComponent() {
