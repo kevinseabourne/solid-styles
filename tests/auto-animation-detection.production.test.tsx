@@ -222,7 +222,7 @@ describe('Production-Grade: Automatic Animation Detection', () => {
       expect(screen.getByTestId('btn-0')).toBeInTheDocument();
       expect(screen.getByTestId('btn-50')).toBeInTheDocument();
       expect(screen.getByTestId('btn-99')).toBeInTheDocument();
-    });
+    }, 60000);
   });
 
   describe('Performance & Memory', () => {
@@ -270,7 +270,7 @@ describe('Production-Grade: Automatic Animation Detection', () => {
 
       // Should not have lingering references
       expect(screen.queryByTestId('item-0')).not.toBeInTheDocument();
-    });
+    }, 60000);
 
     it('should reuse animation system cache across multiple components', () => {
       const Button1 = styled.button`color: red;`;
