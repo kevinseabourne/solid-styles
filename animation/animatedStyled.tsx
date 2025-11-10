@@ -136,6 +136,13 @@ export interface AnimateConfig<T extends SpringTarget = any> {
     damping?: number;
 
     /**
+     * Animation duration in milliseconds
+     * This will be converted to appropriate stiffness/damping values
+     * Note: Using duration may override stiffness/damping if both are provided
+     */
+    duration?: number;
+
+    /**
      * Animation delay in ms
      * Default: 0
      */
@@ -199,6 +206,36 @@ export interface AnimatedProps<P = {}> {
   animate?: AnimateConfig | AnimateConfig[];
 
   /**
+   * Framer Motion style hover animation
+   * Shorthand for animate={{ from: current, to: whileHover, when: 'hover' }}
+   */
+  whileHover?: Partial<SpringTarget>;
+
+  /**
+   * Framer Motion style focus animation
+   * Shorthand for animate={{ from: current, to: whileFocus, when: 'focus' }}
+   */
+  whileFocus?: Partial<SpringTarget>;
+
+  /**
+   * Framer Motion style click/tap animation
+   * Shorthand for animate={{ from: current, to: whileTap, when: 'click' }}
+   */
+  whileTap?: Partial<SpringTarget>;
+
+  /**
+   * Framer Motion style inView animation
+   * Shorthand for animate={{ from: current, to: whileInView, when: 'inView' }}
+   */
+  whileInView?: Partial<SpringTarget>;
+
+  /**
+   * Initial animation state (for mount animations)
+   * Shorthand for animate={{ from: initial, to: animate, when: 'mount' }}
+   */
+  initial?: Partial<SpringTarget>;
+
+  /**
    * Apply CSS transition instead of spring animation for reduced motion
    */
   reducedMotionTransition?: string;
@@ -218,6 +255,15 @@ export interface AnimatedProps<P = {}> {
    * Default: "auto" (uses GPU for transform animations)
    */
   hardware?: "auto" | "always" | "never";
+
+  /**
+   * Spring configuration for all animations
+   */
+  transition?: {
+    stiffness?: number;
+    damping?: number;
+    precision?: number;
+  };
 }
 
 /**
@@ -1700,6 +1746,164 @@ const updateDOMStyle = (element: HTMLElement, key: string, value: any) => {
 };
 
 // =============================================================================
+// Prop Transformation
+// =============================================================================
+
+/**
+ * Convert duration (ms) to approximate spring stiffness and damping values
+ * This provides duration-based animation control similar to CSS transitions
+ * @param duration Duration in milliseconds
+ * @returns Spring config with stiffness and damping
+ */
+const durationToSpringConfig = (duration: number): { stiffness: number; damping: number } => {
+  // Formula derived from spring physics:
+  // Longer duration = lower stiffness, higher damping for slower, smoother motion
+  // Shorter duration = higher stiffness, lower damping for faster, snappier motion
+  
+  // Base calculations (adjusted empirically for good feel)
+  const stiffness = Math.max(10, 1000 / duration);
+  const damping = Math.max(10, Math.min(50, 10 + (duration / 100)));
+  
+  return { stiffness, damping };
+};
+
+/**
+ * Transform Framer Motion style props (whileHover, whileTap, etc.) into AnimateConfig format
+ * This provides API compatibility with Framer Motion while using our spring system
+ */
+const transformAnimationProps = (props: AnimatedProps): AnimateConfig[] => {
+  const configs: AnimateConfig[] = [];
+  
+  // Get default spring config from transition prop
+  const defaultConfig = props.transition || {};
+  
+  // Handle whileHover prop
+  if (props.whileHover) {
+    // Extract base values from whileHover by inverting transformations
+    const from: any = {};
+    Object.keys(props.whileHover).forEach(key => {
+      const value = (props.whileHover as any)[key];
+      // For scale, default from is 1
+      if (key === 'scale' || key === 'scaleX' || key === 'scaleY') {
+        from[key] = 1;
+      }
+      // For opacity, default from is current (1)
+      else if (key === 'opacity') {
+        from[key] = 1;
+      }
+      // For transforms like x, y, rotate, default from is 0
+      else if (isTransformProperty(key)) {
+        from[key] = 0;
+      }
+      // For other properties, use 0 as default
+      else {
+        from[key] = 0;
+      }
+    });
+    
+    configs.push({
+      from,
+      to: props.whileHover as any,
+      when: 'hover',
+      config: defaultConfig,
+      reverseOnExit: true,
+    });
+  }
+  
+  // Handle whileFocus prop
+  if (props.whileFocus) {
+    const from: any = {};
+    Object.keys(props.whileFocus).forEach(key => {
+      const value = (props.whileFocus as any)[key];
+      if (key === 'scale' || key === 'scaleX' || key === 'scaleY') {
+        from[key] = 1;
+      } else if (key === 'opacity') {
+        from[key] = 1;
+      } else if (isTransformProperty(key)) {
+        from[key] = 0;
+      } else {
+        from[key] = 0;
+      }
+    });
+    
+    configs.push({
+      from,
+      to: props.whileFocus as any,
+      when: 'focus',
+      config: defaultConfig,
+      reverseOnExit: true,
+    });
+  }
+  
+  // Handle whileTap prop (maps to click)
+  if (props.whileTap) {
+    const from: any = {};
+    Object.keys(props.whileTap).forEach(key => {
+      const value = (props.whileTap as any)[key];
+      if (key === 'scale' || key === 'scaleX' || key === 'scaleY') {
+        from[key] = 1;
+      } else if (key === 'opacity') {
+        from[key] = 1;
+      } else if (isTransformProperty(key)) {
+        from[key] = 0;
+      } else {
+        from[key] = 0;
+      }
+    });
+    
+    configs.push({
+      from,
+      to: props.whileTap as any,
+      when: 'click',
+      config: defaultConfig,
+      reverseOnExit: true,
+    });
+  }
+  
+  // Handle whileInView prop
+  if (props.whileInView) {
+    const from: any = {};
+    Object.keys(props.whileInView).forEach(key => {
+      const value = (props.whileInView as any)[key];
+      if (key === 'scale' || key === 'scaleX' || key === 'scaleY') {
+        from[key] = 1;
+      } else if (key === 'opacity') {
+        from[key] = 1;
+      } else if (isTransformProperty(key)) {
+        from[key] = 0;
+      } else {
+        from[key] = 0;
+      }
+    });
+    
+    configs.push({
+      from,
+      to: props.whileInView as any,
+      when: 'inView',
+      config: defaultConfig,
+      reverseOnExit: false, // inView typically doesn't reverse
+    });
+  }
+  
+  // Handle initial prop (mount animation)
+  if (props.initial && props.animate) {
+    // Use initial as 'from' and animate as 'to' for mount animation
+    const animateValue = Array.isArray(props.animate) ? props.animate[0] : props.animate;
+    if (animateValue && typeof animateValue === 'object' && 'to' in animateValue) {
+      configs.push({
+        from: props.initial as any,
+        to: animateValue.to,
+        when: 'mount',
+        config: defaultConfig,
+        reverseOnExit: false,
+      });
+    }
+  }
+  
+  return configs;
+};
+
+// =============================================================================
 // Animated Component Factory
 // =============================================================================
 
@@ -1730,6 +1934,12 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
     // Split animation props from regular props
     const [animationProps, otherProps] = splitProps(props, [
       "animate",
+      "whileHover",
+      "whileFocus",
+      "whileTap",
+      "whileInView",
+      "initial",
+      "transition",
       "reducedMotionTransition",
       "hardware",
       "ref",
@@ -1741,11 +1951,19 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
 
     // Process animation configurations
     const animateConfigs = createMemo(() => {
+      // Transform Framer Motion style props first
+      const transformedConfigs = transformAnimationProps(animationProps);
+      
       const { animate } = animationProps;
-      if (!animate) return [];
+      
+      // Merge transformed configs with explicit animate configs
+      if (!animate) return transformedConfigs;
 
       // Handle array or single config
-      return Array.isArray(animate) ? animate : [animate];
+      const explicitConfigs = Array.isArray(animate) ? animate : [animate];
+      
+      // Return combined array - transformed props first, then explicit animate configs
+      return [...transformedConfigs, ...explicitConfigs];
     });
 
     // Generate styles from animations
@@ -1805,12 +2023,9 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
         // Clear previous animation results
         animationResults.splice(0, animationResults.length);
 
-        // Get current animation configurations - this makes the effect reactive to config changes
-        const currentConfigs = Array.isArray(animationProps.animate)
-          ? animationProps.animate
-          : animationProps.animate
-            ? [animationProps.animate]
-            : [];
+        // CRITICAL FIX: Use the animateConfigs memo that includes transformed props
+        // This ensures whileHover, whileTap, etc. are actually used
+        const currentConfigs = animateConfigs();
 
         // Process each animation configuration
         currentConfigs.forEach((config, index) => {
@@ -1862,6 +2077,19 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             onInterrupt,
             ...options
           } = finalConfig;
+          
+          // Process spring config - convert duration to stiffness/damping if needed
+          let processedSpringConfig = springConfig ? { ...springConfig } : undefined;
+          if (processedSpringConfig?.duration) {
+            const { stiffness, damping } = durationToSpringConfig(processedSpringConfig.duration);
+            processedSpringConfig = {
+              ...processedSpringConfig,
+              stiffness: processedSpringConfig.stiffness || stiffness,
+              damping: processedSpringConfig.damping || damping,
+            };
+            // Remove duration as it's been converted
+            delete (processedSpringConfig as any).duration;
+          }
 
           // If reduced motion is preferred, use CSS transitions instead if specified
           if (prefersReducedMotion() && animationProps.reducedMotionTransition) {
@@ -1883,55 +2111,33 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
           // CRITICAL FIX: Setup direct element monitoring for ALL animation trigger types
           // This ensures ALL animations have working triggers, not just hover
           if (triggerType === "focus" || (Array.isArray(triggerType) && triggerType.includes("focus"))) {
-            // Focus/blur event monitoring
+            // Focus/blur event monitoring - spring system will handle the animation
             element.addEventListener("focus", () => {
               setManualFocused(true);
-              // Direct style application for immediate feedback
-              if (evaluatedTo) {
-                applyStyles(evaluatedTo, element);
-              }
             });
 
             element.addEventListener("blur", () => {
               setManualFocused(false);
-              // Reverse animation on blur if needed
-              if (reverseOnExit && evaluatedFrom) {
-                applyStyles(evaluatedFrom, element);
-              }
             });
           }
 
           // Setup mount animation trigger
           if (triggerType === "mount" || (Array.isArray(triggerType) && triggerType.includes("mount"))) {
-            // Immediately mark as mounted to trigger animation
+            // Immediately mark as mounted to trigger spring animation
+            // The spring system will handle the animation from 'from' to 'to'
             setManualMounted(true);
-
-            // Direct style application for immediate feedback
-            if (evaluatedTo) {
-              // Small delay to ensure the element is fully rendered
-              setTimeout(() => {
-                applyStyles(evaluatedTo, element);
-              }, 10);
-            }
           }
 
           // Setup inView animation trigger
           if (triggerType === "inView" || (Array.isArray(triggerType) && triggerType.includes("inView"))) {
-
             // Create an IntersectionObserver to monitor visibility
+            // Spring system will handle the actual animation
             const observer = new IntersectionObserver(
               (entries) => {
                 const [entry] = entries;
                 const isVisible = entry.isIntersecting;
 
                 setManualInView(isVisible);
-
-                // Direct style application for immediate feedback
-                if (isVisible && evaluatedTo) {
-                  applyStyles(evaluatedTo, element);
-                } else if (!isVisible && reverseOnExit && evaluatedFrom) {
-                  applyStyles(evaluatedFrom, element);
-                }
 
                 // If "once" option is set, disconnect after becoming visible
                 if (isVisible && inViewOptions?.once) {
@@ -2099,8 +2305,8 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
           const result = useAnimation({
             when: trigger,
             reverseOnExit,
-            // Forward spring config properly
-            ...(springConfig ? { ...springConfig } : {}),
+            // Forward processed spring config (with duration converted to stiffness/damping)
+            ...(processedSpringConfig ? { ...processedSpringConfig } : {}),
             ...(onStart ? { onStart } : {}),
             ...(onComplete ? { onComplete } : {}),
             // CRITICAL FIX: Add onInterrupt callback for reactive value changes

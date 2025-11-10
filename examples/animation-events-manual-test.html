@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animation Events & Spring Physics Manual Test</title>
+  <script type="module" src="/examples/animation-events-manual-test.tsx"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 40px;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    h1 {
+      color: #60a5fa;
+      margin-bottom: 10px;
+    }
+
+    .description {
+      color: #94a3b8;
+      margin-bottom: 40px;
+      line-height: 1.6;
+    }
+
+    .test-section {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid #334155;
+    }
+
+    .test-section h2 {
+      color: #38bdf8;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .test-item {
+      background: #0f172a;
+      border: 2px solid #475569;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .test-item:hover {
+      border-color: #60a5fa;
+    }
+
+    .test-label {
+      font-size: 0.875rem;
+      color: #cbd5e1;
+      margin-top: 10px;
+      display: block;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 10px;
+    }
+
+    .status.pass {
+      background: #065f46;
+      color: #34d399;
+    }
+
+    .status.pending {
+      background: #78350f;
+      color: #fbbf24;
+    }
+
+    .instructions {
+      background: #1e3a8a;
+      border: 2px solid #3b82f6;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    .instructions h3 {
+      margin-top: 0;
+      color: #93c5fd;
+    }
+
+    .instructions ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .instructions li {
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+
+    .spacer {
+      height: 100vh;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    input {
+      font-size: 1rem;
+      border: none;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>
