@@ -108,11 +108,16 @@ async function detectFramework(rootDir) {
     // Debug: Log detected packages (only in verbose mode)
     if (process.env.VERBOSE) {
       log('\n🔍 Detected packages:', 'cyan');
-      const relevantPkgs = ['astro', '@astrojs/solid-js', '@astrojs/solid', 'solid-js', '@solidjs/start', 'solid-start'];
+      const relevantPkgs = ['astro', '@astrojs/solid-js', '@astrojs/solid', 'solid-js', '@solidjs/start', 'solid-start', '@tauri-apps/api', '@tauri-apps/plugin-opener'];
       relevantPkgs.forEach(pkg => {
         if (deps[pkg]) log(`  ✓ ${pkg}`, 'green');
       });
       log('');
+    }
+    
+    // Detect Tauri + SolidJS (check for Tauri-specific packages)
+    if ((deps['@tauri-apps/api'] || deps['@tauri-apps/plugin-opener'] || deps['@tauri-apps/cli']) && deps['solid-js']) {
+      return { framework: 'tauri', bundler: 'vite', typescript };
     }
     
     // Detect Astro + SolidJS (check multiple variations)
@@ -497,6 +502,21 @@ html, body {
   await updateAstroConfig(rootDir, typescript);
 }
 
+async function createTauriConfiguration(rootDir, bundler, typescript) {
+  log(`🦀 Setting up for Tauri + SolidJS with ${bundler}...`, 'cyan');
+  
+  // Create theme file (same as Solid)
+  await createSolidConfiguration(rootDir, bundler, typescript);
+  
+  // Check for tauri.conf.json
+  const tauriConfigPath = resolve(rootDir, 'src-tauri', 'tauri.conf.json');
+  if (await fileExists(tauriConfigPath)) {
+    log('✅ Tauri configuration detected', 'green');
+  }
+  
+  log('✅ Tauri + SolidJS project configured', 'green');
+}
+
 async function updateAstroConfig(rootDir, typescript) {
   const configFile = typescript ? 'astro.config.ts' : 'astro.config.mjs';
   const configPath = resolve(rootDir, configFile);
@@ -589,7 +609,9 @@ async function main() {
     
     // Detect framework
     const { framework, bundler, typescript } = await detectFramework(rootDir);
-    if (framework === 'astro') {
+    if (framework === 'tauri') {
+      log(`🔍 Detected: Tauri + SolidJS project using ${bundler}${typescript ? ' with TypeScript' : ''}`, 'blue');
+    } else if (framework === 'astro') {
       log(`🔍 Detected: Astro + SolidJS project using ${bundler}${typescript ? ' with TypeScript' : ''}`, 'blue');
     } else if (framework === 'solid-start') {
       log(`🔍 Detected: SolidStart project using ${bundler}${typescript ? ' with TypeScript' : ''}`, 'blue');
@@ -606,7 +628,9 @@ async function main() {
     }
     
     // Configure based on framework
-    if (framework === 'astro') {
+    if (framework === 'tauri') {
+      await createTauriConfiguration(rootDir, bundler, typescript);
+    } else if (framework === 'astro') {
       await createAstroConfiguration(rootDir, bundler, typescript);
     } else if (framework === 'solid-start') {
       await createSolidStartConfiguration(rootDir, bundler, typescript);
@@ -625,7 +649,19 @@ async function main() {
     // Show what was configured
     const themeExt = typescript ? '.ts' : '.js';
     log('📚 Setup complete! Here\'s what was created:', 'cyan');
-    if (framework === 'astro') {
+    if (framework === 'tauri') {
+      log('  ✅ Tauri + SolidJS project configured', 'green');
+      log(`  ✅ Theme file: ./src/theme${themeExt} → import { theme } from "./src/theme"`, 'green');
+      log('  ✅ Global styles: ./src/index.css → import "./src/index.css"', 'green');
+      log('', '');
+      log('📚 Next steps:', 'cyan');
+      log('  1. Import the theme in your main component:', 'blue');
+      log('     import { theme } from "./theme";', 'blue');
+      log('  2. Use styled components:', 'blue');
+      log('     import { styled } from "solid-styles";', 'blue');
+      log('  3. Build your Tauri app:', 'blue');
+      log('     pnpm tauri dev', 'blue');
+    } else if (framework === 'astro') {
       log('  ✅ Astro + SolidJS project configured', 'green');
       log(`  ✅ Theme file: ./src/components/theme${themeExt}`, 'green');
       log('  ✅ Global styles: ./src/styles/global.css', 'green');
