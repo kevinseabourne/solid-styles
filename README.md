@@ -432,28 +432,37 @@ const theme = { colors: { primary: "#007bff" } };
 
 ### **6. Spring Animations**
 
-```tsx
-// No verbose animated() wrapper needed!
-// Just use animate props directly on styled components
+**✨ Automatic Animation Detection** - No wrapping needed!
 
+```tsx
+import { styled } from 'solid-styles';
+
+// Create any styled component
 const AnimatedBox = styled.div`
   padding: 2rem;
   background: linear-gradient(45deg, #667eea, #764ba2);
   border-radius: 8px;
 `;
 
-// Use animation props directly - automatic detection!
+// Just add animation props - automatic detection handles everything!
 <AnimatedBox
   animate={{
     from: { opacity: 0, y: 20 },
     to: { opacity: 1, y: 0 },
     config: { stiffness: 100, damping: 15 },
-    when: "mount",
   }}
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
 >
-  This content fades in and moves up automatically!
-</AnimatedBox>;
+  Animations work automatically! 🎉
+</AnimatedBox>
 ```
+
+**How it works:**
+- 🎯 Detects animation props automatically (`animate`, `whileHover`, `whileTap`, etc.)
+- 📦 Lazy loads animation engine only when needed
+- ⚡ Zero configuration required
+- 🌊 Spring physics built-in
 
 ### **7. Advanced Spring Control**
 
@@ -482,16 +491,16 @@ The advanced animation system provides a comprehensive, declarative API for crea
 
 ### **Basic Usage Examples**
 
-#### **🚀 Streamlined Animation Syntax (No Wrappers!)**
+#### **🚀 Automatic Animation Detection**
 
-**Just use animation props directly on any styled component** - automatic detection handles everything:
+**No wrappers, no configuration - just add animation props!**
 
-> **How it works:** Solid Styles automatically detects when you use animation props like `animate`, `whileHover`, `whileTap`, etc. on a styled component. When detected, it dynamically loads and applies the animation system behind the scenes. This means you get the performance benefits of code-splitting (animation system only loads when needed) while keeping your code simple and declarative.
->
-> **No imports needed!** You don't need to import `animated()` or wrap your components. Just add animation props and they work automatically.
+> **🧠 How it works:** Solid Styles automatically detects when you use animation props (`animate`, `whileHover`, `whileTap`, etc.) on any styled component. The animation engine lazy-loads only when needed, keeping your bundle small and your code clean.
 
 ```tsx
-// Create regular styled components
+import { styled } from 'solid-styles';
+
+// Step 1: Create styled components as usual
 const Button = styled.button`
   padding: 12px 24px;
   background: #007bff;
@@ -508,12 +517,11 @@ const Card = styled.div`
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 `;
 
-// Use animation props directly - automatic detection!
+// Step 2: Add animation props directly - that's it!
 <Button
   animate={{
     from: { scale: 0.95 },
     to: { scale: 1 },
-    when: "mount"
   }}
   whileHover={{ scale: 1.05 }}
   whileTap={{ scale: 0.98 }}
@@ -526,37 +534,31 @@ const Card = styled.div`
     from: { opacity: 0, y: 20 },
     to: { opacity: 1, y: 0 },
     config: { stiffness: 120, damping: 20 },
-    when: "mount"
   }}
 >
-  This content will fade in and move up when mounted
+  Fades in and slides up automatically
 </Card>
-
-// Usage with styled components
-const Box = styled("div")`
-  padding: 2rem;
-  background: linear-gradient(45deg, #667eea, #764ba2);
-  border-radius: 8px;
-`;
-
-const AnimatedBox = Box;
-
-<AnimatedBox
-  animate={{
-    from: { opacity: 0, scale: 0.8 },
-    to: { opacity: 1, scale: 1 },
-    config: { stiffness: 150, damping: 15 },
-    when: "mount"
-  }}
->
-  Interactive Content
-</AnimatedBox>
 ```
+
+**✨ Key Benefits:**
+- 🔧 **Zero configuration** - No setup required
+- 📦 **Lazy loading** - Animation engine loads only when used
+- 🎯 **Works on any styled component** - No special imports
+- 🌊 **Spring physics** - Natural, realistic motion
+- ⚡ **SSR safe** - No hydration mismatches
 
 #### **🎨 Rich Animation Props**
 
 ```tsx
-<StyledComponent
+import { styled } from 'solid-styles';
+
+const InteractiveBox = styled.div`
+  padding: 2rem;
+  background: #f0f9ff;
+  border-radius: 12px;
+`;
+
+<InteractiveBox
   // Mount animation
   animate={{
     from: { opacity: 0, y: 20 },
@@ -577,14 +579,16 @@ const AnimatedBox = Box;
   dragConstraints={{ left: -100, right: 100 }}
 >
   Fully interactive content!
-</StyledComponent>
+</InteractiveBox>
 ```
 
 #### **🎯 All HTML Elements Support Animations**
 
-**Every styled component automatically supports animations** - no special imports needed:
+**Every styled component automatically supports animations:**
 
 ```tsx
+import { styled } from 'solid-styles';
+
 // Create any styled component
 const Button = styled.button`
   padding: 12px 24px;
@@ -605,12 +609,12 @@ const Image = styled.img`
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 `;
 
-// Use animation props directly on ANY styled component
+// Add animation props directly - works on ANY element
 <Button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
   Interactive Button
 </Button>
 
-<Heading animate={{ from: { y: -20 }, to: { y: 0 }, when: "mount" }}>
+<Heading animate={{ from: { y: -20 }, to: { y: 0 } }}>
   Animated Title
 </Heading>
 
