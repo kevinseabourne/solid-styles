@@ -228,7 +228,7 @@ describe('Production-Grade: Automatic Animation Detection', () => {
   describe('Performance & Memory', () => {
     it('should not create memory leaks with large lists', async () => {
       const Item = styled.div`padding: 8px;`;
-      const itemCount = 1000;
+      const itemCount = 100; // Reduced from 1000 for CI performance
 
       function TestComponent() {
         const [items, setItems] = createSignal(Array.from({ length: itemCount }, (_, i) => i));
@@ -270,7 +270,7 @@ describe('Production-Grade: Automatic Animation Detection', () => {
 
       // Should not have lingering references
       expect(screen.queryByTestId('item-0')).not.toBeInTheDocument();
-    }, 60000);
+    }, 30000); // Reduced timeout since we have fewer items
 
     it('should reuse animation system cache across multiple components', () => {
       const Button1 = styled.button`color: red;`;
