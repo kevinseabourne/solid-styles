@@ -452,24 +452,41 @@ const applyHardwareAcceleration = (
 
 /**
  * Checks if a given property should be applied as a transform
+ * Supports all CSS transform functions including shorthand notations
  */
 const isTransformProperty = (prop: string): boolean => {
   return [
+    // Shorthand translation (x, y, z map to translateX, translateY, translateZ)
     "x",
     "y",
     "z",
+    // Translation transforms
     "translateX",
     "translateY",
     "translateZ",
+    "translate",
+    "translate3d",
+    // Scale transforms
     "scale",
     "scaleX",
     "scaleY",
+    "scaleZ",
+    "scale3d",
+    // Rotation transforms
     "rotate",
     "rotateX",
     "rotateY",
+    "rotateZ",
+    "rotate3d",
+    // Skew transforms
     "skew",
     "skewX",
     "skewY",
+    // Matrix transforms
+    "matrix",
+    "matrix3d",
+    // Perspective
+    "perspective",
   ].includes(prop);
 };
 
@@ -480,18 +497,34 @@ const formatTransformValue = (key: string, value: any): string => {
   }
 
   // Handle special transform properties with appropriate units
+  // Scale transforms - no units needed
   if (key.includes("scale")) {
-    // Scale doesn't need units
     return String(value);
-  } else if (key.includes("rotate")) {
-    // Rotation should use deg units if numeric
+  }
+  
+  // Rotation transforms - use deg units if numeric
+  if (key.includes("rotate")) {
     return typeof value === "number" ? `${value}deg` : String(value);
-  } else if (key.includes("translate")) {
-    // Translation should use px units if numeric
+  }
+  
+  // Translation transforms (including shorthand x, y, z) - use px units if numeric
+  if (key.includes("translate") || key === "x" || key === "y" || key === "z") {
     return typeof value === "number" ? `${value}px` : String(value);
-  } else if (key.includes("skew")) {
-    // Skew should use deg units if numeric
+  }
+  
+  // Skew transforms - use deg units if numeric
+  if (key.includes("skew")) {
     return typeof value === "number" ? `${value}deg` : String(value);
+  }
+  
+  // Perspective - use px units if numeric
+  if (key === "perspective") {
+    return typeof value === "number" ? `${value}px` : String(value);
+  }
+  
+  // Matrix transforms - return as-is (they're already formatted)
+  if (key.includes("matrix")) {
+    return String(value);
   }
 
   // Default fallback for other transform types
@@ -538,6 +571,11 @@ const applyStyles = (styles: Record<string, any>, el: HTMLElement) => {
 
   if (IS_DEBUG_MODE) {
   }
+};
+
+// Helper to get test ID from element - supports both data-test-id and data-testid
+const getTestId = (element: HTMLElement): string | null => {
+  return element.getAttribute("data-testid") || element.getAttribute("data-test-id");
 };
 
 // Store refs to all active animations for direct control
@@ -744,9 +782,9 @@ const registerAnimation = (id: string, animation: any, config: any) => {
 
 // Updated direct event handler setup function
 const setupDirectEventHandlers = (el: HTMLElement) => {
-  const testId = el.getAttribute("data-test-id");
+  const testId = getTestId(el);
   if (!testId) {
-    console.warn("[ANIM-WARN] Element without data-test-id cannot use direct event handlers");
+    console.warn("[ANIM-WARN] Element without test ID (data-testid or data-test-id) cannot use direct event handlers");
     return () => {};
   }
 
@@ -765,7 +803,7 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
   // ARCHITECTURE FIX: Handle mouse events with unified trigger registry
   const handleDirectMouseEnter = (e: MouseEvent) => {
     const targetElement = e.currentTarget as HTMLElement;
-    const targetTestId = targetElement.getAttribute("data-test-id");
+    const targetTestId = getTestId(targetElement);
 
     if (IS_DEBUG_MODE) {
     }
@@ -780,6 +818,18 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     const triggerEntry = triggerRegistry.get(targetTestId);
     if (triggerEntry && triggerEntry.triggers.has("hover")) {
       triggerEntry.setActive(true);
+
+      // CRITICAL FIX: Also update the manual hover signals in animations
+      // This connects the DOM event handlers to the SolidJS reactive signals
+      animationRegistry.forEach((animation, id) => {
+        if (
+          animation.elementId === targetTestId &&
+          animation.setHoverState &&
+          typeof animation.setHoverState === "function"
+        ) {
+          animation.setHoverState(true);
+        }
+      });
 
       // Also find all animations for this element to directly control them
       animationRegistry.forEach((animation, id) => {
@@ -856,7 +906,7 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
 
   const handleDirectMouseLeave = (e: MouseEvent) => {
     const targetElement = e.currentTarget as HTMLElement;
-    const targetTestId = targetElement.getAttribute("data-test-id");
+    const targetTestId = getTestId(targetElement);
 
 
     // Skip if we don't have a test ID
@@ -869,6 +919,18 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     const triggerEntry = triggerRegistry.get(targetTestId);
     if (triggerEntry && triggerEntry.triggers.has("hover")) {
       triggerEntry.setActive(false);
+
+      // CRITICAL FIX: Also update the manual hover signals in animations
+      // This connects the DOM event handlers to the SolidJS reactive signals
+      animationRegistry.forEach((animation, id) => {
+        if (
+          animation.elementId === targetTestId &&
+          animation.setHoverState &&
+          typeof animation.setHoverState === "function"
+        ) {
+          animation.setHoverState(false);
+        }
+      });
 
       // Also find all animations for this element to directly control them
       animationRegistry.forEach((animation, id) => {
@@ -946,12 +1008,12 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
 
   const handleDirectClick = (e: MouseEvent) => {
     const targetElement = e.currentTarget as HTMLElement;
-    const targetTestId = targetElement.getAttribute("data-test-id");
+    const targetTestId = getTestId(targetElement);
 
 
     // CRITICAL FIX: Check if the targetElement has already been processed
     if (!targetTestId) {
-      console.warn("[ANIM-WARN] Cannot handle click on element without data-test-id");
+      console.warn("[ANIM-WARN] Cannot handle click on element without test ID (data-testid or data-test-id)");
       return;
     }
 
@@ -1218,7 +1280,7 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
   };
 
   // CRITICAL FIX: Check if this element already has event handlers to prevent duplication
-  const elementId = el.getAttribute("data-test-id") || "";
+  const elementId = getTestId(el) || "";
   if (elementsWithEventHandlers.has(elementId)) {
     // Return empty cleanup function since we didn't add any new handlers
     return () => {};
@@ -1783,7 +1845,7 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
           }
 
           // Generate unique animation ID using test-id if available
-          const testId = element.getAttribute("data-test-id") || "unknown";
+          const testId = getTestId(element) || "unknown";
           const animId = `${testId}-anim-${index}`;
 
           if (IS_DEBUG_MODE) {
@@ -1952,12 +2014,12 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
           // Completely rewrite the direct click handler to properly handle animations
           const handleDirectClick = (e: MouseEvent) => {
             const targetElement = e.currentTarget as HTMLElement;
-            const targetTestId = targetElement.getAttribute("data-test-id");
+            const targetTestId = getTestId(targetElement);
 
 
             // CRITICAL FIX: Check if the targetElement has already been processed
             if (!targetTestId) {
-              console.warn("[ANIM-WARN] Cannot handle click on element without data-test-id");
+              console.warn("[ANIM-WARN] Cannot handle click on element without test ID (data-testid or data-test-id)");
               return;
             }
 
@@ -2004,6 +2066,18 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
 
               // Set click state in trigger registry (for system consistency)
               triggerEntry.setActive(newState);
+
+              // CRITICAL FIX: Also update the manual click signals in animations
+              // This connects the DOM event handlers to the SolidJS reactive signals
+              animationRegistry.forEach((animation, id) => {
+                if (
+                  animation.elementId === targetTestId &&
+                  animation.setClickState &&
+                  typeof animation.setClickState === "function"
+                ) {
+                  animation.setClickState(newState);
+                }
+              });
 
               if (!animationFound) {
                 console.warn(`[ANIM-WARN] No click animations found for element ${targetTestId}`);
@@ -2098,6 +2172,17 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             const currentValue = result.value();
             const isActive = result.isActive();
             const state = result.state();
+            
+            // CRITICAL: Log what we're trying to apply for debugging
+            if (IS_DEBUG_MODE) {
+              console.log('[DOM-APPLY]', {
+                testId,
+                isActive,
+                state,
+                currentValue,
+                hasTransform: Object.keys(currentValue).some(isTransformProperty)
+              });
+            }
 
             // CRITICAL FIX: Transform handling
             // We must separate transform collection and application to avoid compounding issues
@@ -2118,9 +2203,24 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
                 // Format transform value with proper units
                 const transformValue = formatTransformValue(key, value);
 
-                // Get current transform and append new transform
-                const currentTransform = animElement.style.transform || "";
-                animElement.style.transform = `${currentTransform} ${key}(${transformValue})`.trim();
+                // Convert shorthand property names to full CSS transform function names
+                let transformFunctionName = key;
+                
+                // Translation transforms
+                if (key === "x") transformFunctionName = "translateX";
+                else if (key === "y") transformFunctionName = "translateY";
+                else if (key === "z") transformFunctionName = "translateZ";
+                
+                // Already correct CSS function names - no mapping needed:
+                // - translateX, translateY, translateZ, translate, translate3d
+                // - scale, scaleX, scaleY, scaleZ, scale3d
+                // - rotate, rotateX, rotateY, rotateZ, rotate3d
+                // - skew, skewX, skewY
+                // - matrix, matrix3d, perspective
+
+                // Collect transforms in array with correct function names
+                transformsToApply.push(`${transformFunctionName}(${transformValue})`);
+              
               } else {
                 // For non-transform properties, apply directly
                 try {
@@ -2164,20 +2264,26 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             if (transformsToApply.length > 0) {
               const newTransform = transformsToApply.join(" ");
               animElement.style.transform = newTransform;
-
-              // Verify it was actually set
-
-              // Check if the style took effect visually by logging computed style
-              const computedTransform = window.getComputedStyle(animElement).transform;
-              if (computedTransform === "none" && newTransform !== "") {
-                console.warn(
-                  `[DIAG-DOM] ⚠️ Transform not applied in computed style! This indicates a DOM application issue.`
-                );
-              }
-            } else {
             }
           });
         });
+      });
+    });
+
+    // Setup event handlers in a reactive context
+    createEffect(() => {
+      const el = elementRef();
+      if (!el) return;
+
+      // CRITICAL: Setup direct event handlers for hover, click, focus
+      // This ensures event-based animations work correctly
+      const cleanupHandlers = setupDirectEventHandlers(el);
+      
+      // Cleanup event handlers when component unmounts or element changes
+      onCleanup(() => {
+        if (cleanupHandlers) {
+          cleanupHandlers();
+        }
       });
     });
 
