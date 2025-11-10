@@ -105,8 +105,23 @@ async function detectFramework(rootDir) {
     const deps = { ...packageJson.dependencies, ...packageJson.devDependencies };
     const typescript = await detectTypeScript(rootDir);
     
-    // Detect Astro + SolidJS
-    if (deps['astro'] && deps['@astrojs/solid-js']) {
+    // Debug: Log detected packages (only in verbose mode)
+    if (process.env.VERBOSE) {
+      log('\n🔍 Detected packages:', 'cyan');
+      const relevantPkgs = ['astro', '@astrojs/solid-js', '@astrojs/solid', 'solid-js', '@solidjs/start', 'solid-start'];
+      relevantPkgs.forEach(pkg => {
+        if (deps[pkg]) log(`  ✓ ${pkg}`, 'green');
+      });
+      log('');
+    }
+    
+    // Detect Astro + SolidJS (check multiple variations)
+    if (deps['astro'] && (deps['@astrojs/solid-js'] || deps['@astrojs/solid'])) {
+      return { framework: 'astro', bundler: 'vite', typescript };
+    }
+    
+    // Also check if Astro is present with solid-js (user might have installed solid-js separately)
+    if (deps['astro'] && deps['solid-js']) {
       return { framework: 'astro', bundler: 'vite', typescript };
     }
     
