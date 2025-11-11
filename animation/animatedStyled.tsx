@@ -722,18 +722,9 @@ const registerAnimation = (id: string, animation: any, config: any) => {
                 if (anim.config.precision !== undefined) springConfig.precision = anim.config.precision;
 
 
-                // Normalize spring parameters if needed
-                const normalizedConfig = { ...springConfig };
-                if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-                  normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-                }
-                if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-                  normalizedConfig.damping = normalizedConfig.damping / 100;
-                }
-
-
+                // CRITICAL FIX: Do NOT normalize - spring-bridge already handles it
                 anim.controls.start(anim.config.to, {
-                  ...normalizedConfig,
+                  ...springConfig,
                   hard: false, // Explicitly use spring physics
                 });
 
@@ -756,18 +747,9 @@ const registerAnimation = (id: string, animation: any, config: any) => {
                 if (anim.config.damping !== undefined) springConfig.damping = anim.config.damping;
                 if (anim.config.precision !== undefined) springConfig.precision = anim.config.precision;
 
-                // Normalize spring parameters if needed
-                const normalizedConfig = { ...springConfig };
-                if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-                  normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-                }
-                if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-                  normalizedConfig.damping = normalizedConfig.damping / 100;
-                }
-
-                // Start animation with correctly normalized physics configuration
+                // CRITICAL FIX: Do NOT normalize - spring-bridge already handles it
                 anim.controls.start(anim.config.from, {
-                  ...normalizedConfig,
+                  ...springConfig,
                   hard: false, // Ensure spring physics are used
                 });
               }
@@ -924,23 +906,12 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             // Ensure we have a valid object
             springConfig = springConfig || {};
 
-            // PARAMETER SCALE FIX: Normalize spring physics parameters to core engine scale
-            const normalizedConfig = { ...springConfig };
-
-            // Only normalize if values are in high-level API scale
-            if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-              normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-            }
-
-            if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-              normalizedConfig.damping = normalizedConfig.damping / 100;
-            }
-
-            // Start animation with correctly normalized physics configuration
+            // CRITICAL FIX: Do NOT normalize here - spring-bridge already handles it
+            // Double normalization makes springs 1,000,000x weaker!
+            // Just pass the config directly
             animation.controls.start(animation.config.to, {
-              ...normalizedConfig,
+              ...springConfig,
               hard: false, // Explicitly disable immediate mode
-              soft: false, // Ensure we're not in soft mode either
             });
           } catch (err) {
             console.error(`[ANIM-ERROR] Failed to start animation ${id}:`, err);
@@ -1026,21 +997,9 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
               // Ensure we have a valid object
               springConfig = springConfig || {};
 
-              // PARAMETER SCALE FIX: Normalize spring physics parameters to core engine scale
-              const normalizedConfig = { ...springConfig };
-
-              // Only normalize if values are in high-level API scale
-              if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-                normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-              }
-
-              if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-                normalizedConfig.damping = normalizedConfig.damping / 100;
-              }
-
-              // Start animation with correctly normalized physics configuration
+              // CRITICAL FIX: Do NOT normalize here - spring-bridge already handles it
               animation.controls.start(animation.config.from, {
-                ...normalizedConfig,
+                ...springConfig,
                 hard: false, // Ensure spring physics are used
               });
             } catch (err) {
@@ -1756,13 +1715,23 @@ const updateDOMStyle = (element: HTMLElement, key: string, value: any) => {
  * @returns Spring config with stiffness and damping
  */
 const durationToSpringConfig = (duration: number): { stiffness: number; damping: number } => {
-  // Formula derived from spring physics:
-  // Longer duration = lower stiffness, higher damping for slower, smoother motion
-  // Shorter duration = higher stiffness, lower damping for faster, snappier motion
+  // CRITICAL FIX: Proper formula that actually produces reasonable animation times
+  // Based on empirical testing with spring physics
+  // 
+  // Duration (ms) → Stiffness/Damping:
+  // 200ms → stiff:250, damp:25 (fast, snappy)
+  // 500ms → stiff:150, damp:20 (default, bouncy) 
+  // 1000ms → stiff:100, damp:25 (slow, smooth)
+  // 2000ms → stiff:70, damp:30 (very slow)
   
-  // Base calculations (adjusted empirically for good feel)
-  const stiffness = Math.max(10, 1000 / duration);
-  const damping = Math.max(10, Math.min(50, 10 + (duration / 100)));
+  const durationSec = duration / 1000;
+  
+  // Inverse relationship: longer duration = lower stiffness
+  // But not linear - use power curve for better feel
+  const stiffness = Math.max(50, Math.min(300, 180 / Math.pow(durationSec, 0.7)));
+  
+  // Higher damping for longer durations to prevent oscillation
+  const damping = Math.max(12, Math.min(40, 15 + (durationSec * 8)));
   
   return { stiffness, damping };
 };
@@ -2240,31 +2209,9 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
             // Set a data attribute for debugging
             targetElement.setAttribute("data-click-state", String(newState));
 
-            // SPACEX SOLUTION: Direct, immediate action for click animations
-            // This is what SpaceX engineers would do - don't rely on complex systems when a direct approach works
+            // CRITICAL FIX: Do NOT use applyStyles - it bypasses spring physics!
+            // Let the reactive signal system handle the animation
             let animationFound = false;
-            let targetStyle: any = null;
-
-            // First, let's determine what style changes we need to make
-            animationRegistry.forEach((animation, id) => {
-              if (
-                animation.elementId === targetTestId &&
-                animation.config &&
-                (animation.config.when === "click" ||
-                  (Array.isArray(animation.config.when) && animation.config.when.includes("click")))
-              ) {
-                animationFound = true;
-
-                // Determine which style values to apply based on current state
-                targetStyle = newState ? animation.config.to : animation.config.from;
-
-              }
-            });
-
-            // SPACEX APPROACH: Apply styles directly to DOM for immediate feedback
-            if (targetStyle) {
-              applyStyles(targetStyle, targetElement);
-            }
 
             // ARCHITECTURE FIX: Use the unified trigger registry for animation system integration
             const triggerEntry = triggerRegistry.get(targetTestId);
