@@ -722,9 +722,18 @@ const registerAnimation = (id: string, animation: any, config: any) => {
                 if (anim.config.precision !== undefined) springConfig.precision = anim.config.precision;
 
 
-                // CRITICAL FIX: Do NOT normalize - spring-bridge already handles it
+                // CRITICAL FIX: Normalize config before passing to .start()
+                // .start() options bypass spring-bridge normalization!
+                const normalizedConfig: any = { ...springConfig };
+                if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
+                  normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
+                }
+                if (normalizedConfig.damping && normalizedConfig.damping > 1) {
+                  normalizedConfig.damping = normalizedConfig.damping / 100;
+                }
+
                 anim.controls.start(anim.config.to, {
-                  ...springConfig,
+                  ...normalizedConfig,
                   hard: false, // Explicitly use spring physics
                 });
 
@@ -747,9 +756,17 @@ const registerAnimation = (id: string, animation: any, config: any) => {
                 if (anim.config.damping !== undefined) springConfig.damping = anim.config.damping;
                 if (anim.config.precision !== undefined) springConfig.precision = anim.config.precision;
 
-                // CRITICAL FIX: Do NOT normalize - spring-bridge already handles it
+                // CRITICAL FIX: Normalize config before passing to .start()
+                const normalizedConfig: any = { ...springConfig };
+                if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
+                  normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
+                }
+                if (normalizedConfig.damping && normalizedConfig.damping > 1) {
+                  normalizedConfig.damping = normalizedConfig.damping / 100;
+                }
+
                 anim.controls.start(anim.config.from, {
-                  ...springConfig,
+                  ...normalizedConfig,
                   hard: false, // Ensure spring physics are used
                 });
               }
@@ -906,11 +923,18 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             // Ensure we have a valid object
             springConfig = springConfig || {};
 
-            // CRITICAL FIX: Do NOT normalize here - spring-bridge already handles it
-            // Double normalization makes springs 1,000,000x weaker!
-            // Just pass the config directly
+            // CRITICAL FIX: Normalize config before passing to .start()
+            // .start() options bypass spring-bridge normalization!
+            const normalizedConfig: any = { ...springConfig };
+            if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
+              normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
+            }
+            if (normalizedConfig.damping && normalizedConfig.damping > 1) {
+              normalizedConfig.damping = normalizedConfig.damping / 100;
+            }
+
             animation.controls.start(animation.config.to, {
-              ...springConfig,
+              ...normalizedConfig,
               hard: false, // Explicitly disable immediate mode
             });
           } catch (err) {
@@ -997,9 +1021,18 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
               // Ensure we have a valid object
               springConfig = springConfig || {};
 
-              // CRITICAL FIX: Do NOT normalize here - spring-bridge already handles it
+              // CRITICAL FIX: Normalize config before passing to .start()
+              // .start() options bypass spring-bridge normalization!
+              const normalizedConfig: any = { ...springConfig };
+              if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
+                normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
+              }
+              if (normalizedConfig.damping && normalizedConfig.damping > 1) {
+                normalizedConfig.damping = normalizedConfig.damping / 100;
+              }
+
               animation.controls.start(animation.config.from, {
-                ...springConfig,
+                ...normalizedConfig,
                 hard: false, // Ensure spring physics are used
               });
             } catch (err) {
