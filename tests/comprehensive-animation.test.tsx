@@ -1,7 +1,7 @@
 /** @jsxImportSource solid-js */
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render } from "@solidjs/testing-library";
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onMount, createRoot } from "solid-js";
 import { use3DTransform, useCardFlip } from "../animation/advanced/transforms-3d";
 import { useAnimation, useKeyframeAnimation, useTrigger } from "../animation/hooks";
 import { useGestures } from "../animation/advanced/gesture-support";
@@ -109,67 +109,71 @@ describe("Comprehensive Animation Tests", () => {
   });
 
   describe("Spring Animations", () => {
-    it.skip("should animate using createSpring", async () => {
+    it("should animate using createSpring", async () => {
+      let finalValue = 0;
+      
+      await new Promise<void>((resolve) => {
+        createRoot((dispose) => {
+          const [value, setValue] = createSpring(0, {
+            stiffness: 170,
+            damping: 26,
+          });
 
-      const TestComponent = () => {
-        const [value, setValue] = createSpring(0, {
-          stiffness: 80,  // Reduced stiffness for more predictable behavior
-          damping: 20,    // Increased damping to reduce overshoot
+          // Start animation
+          setValue(100);
+
+          // Wait for animation to progress
+          setTimeout(() => {
+            const midValue = value();
+            expect(midValue).toBeGreaterThan(0);
+          }, 150);
+
+          // Wait for animation to complete
+          setTimeout(() => {
+            finalValue = value();
+            dispose();
+            resolve();
+          }, 600);
         });
+      });
 
-        // Start animation after component mounts
-        setTimeout(() => setValue(100), 10);
-
-        // Use the reactive signal directly in the data-value attribute
-        return <div data-value={value()}>Spring Value: {value()}</div>;
-      };
-
-      const { container } = render(() => <TestComponent />);
-
-      // Initial value
-      const div = container.querySelector("div");
-      expect(div?.getAttribute("data-value")).toBe("0");
-
-      // Wait for animation to progress
-      await sleep(150);
-      const midValue = parseFloat(div?.getAttribute("data-value") || "0");
-      expect(midValue).toBeGreaterThan(0);
-      expect(midValue).toBeLessThan(110); // Allow some overshoot
-
-      // Wait for animation to complete
-      await sleep(800);
-      const finalValue = parseFloat(div?.getAttribute("data-value") || "0");
-      // Spring physics may settle close to but not exactly at target due to precision thresholds
-      expect(finalValue).toBeGreaterThan(90); // More lenient range
-      expect(finalValue).toBeLessThanOrEqual(110); // Allow slight overshoot
+      // Spring should settle close to target
+      expect(finalValue).toBeGreaterThan(95);
+      expect(finalValue).toBeLessThanOrEqual(105);
     });
 
-    it.skip("should handle gradient spring animations", async () => {
-      const TestComponent = () => {
-        const [gradient, setGradient] = createSpring("linear-gradient(45deg, #ff0000 0%, #00ff00 100%)", {
-          stiffness: 50,
-          damping: 20,
-        });
+    it("should handle gradient spring animations", async () => {
+      let initialGradient = "";
+      let finalGradient = "";
+      
+      await new Promise<void>((resolve) => {
+        createRoot((dispose) => {
+          const [gradient, setGradient] = createSpring(
+            "linear-gradient(45deg, #ff0000 0%, #00ff00 100%)",
+            { stiffness: 170, damping: 26 }
+          );
 
-        setTimeout(() => {
+          initialGradient = gradient();
+          
+          // Start animation to new gradient
           setGradient("linear-gradient(45deg, #0000ff 0%, #ffff00 100%)");
-        }, 10);
 
-        return <div style={{ background: gradient() }}>Gradient Animation</div>;
-      };
+          // Wait for animation
+          setTimeout(() => {
+            finalGradient = gradient();
+            dispose();
+            resolve();
+          }, 500);
+        });
+      });
 
-      const { container } = render(() => <TestComponent />);
-      const div = container.querySelector("div");
-
-      // Check initial gradient
-      expect(div?.style.background).toContain("linear-gradient");
-
-      // Wait for animation
-      await sleep(300);
-
-      // Gradient should have interpolated values
-      const background = div?.style.background;
-      expect(background).toContain("linear-gradient");
+      // Both should be linear gradients
+      expect(initialGradient).toContain("linear-gradient");
+      expect(finalGradient).toContain("linear-gradient");
+      
+      // Final gradient should have different colors (blue/yellow vs red/green)
+      // The interpolated result should contain some blue component
+      expect(finalGradient).not.toBe(initialGradient);
     });
   });
 

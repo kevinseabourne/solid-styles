@@ -186,54 +186,61 @@ describe("Core Features Tests", () => {
   });
 
   describe("Spring Animations", () => {
-    it.skip("should create and update spring values", async () => {
-      let currentValue = 0;
+    it("should create and update spring values", async () => {
+      let finalValue = 0;
+      
+      await new Promise<void>((resolve) => {
+        createRoot((dispose) => {
+          const [value, setValue] = createSpring(0, {
+            stiffness: 170,
+            damping: 26,
+          });
 
-      createRoot((dispose) => {
-        const [, setValue] = createSpring(0, {
-          stiffness: 170,
-          damping: 26,
-          onUpdate: (val) => {
-            currentValue = val as number;
-          },
+          // Start animation
+          setValue(100);
+
+          // Wait for animation to settle then check value
+          setTimeout(() => {
+            finalValue = value();
+            dispose();
+            resolve();
+          }, 600);
         });
-
-        // Start animation
-        setValue(100);
-
-        // Cleanup
-        setTimeout(dispose, 600);
       });
 
-      // Wait for spring to settle
-      await sleep(500);
-      // More realistic browser expectations
-      expect(currentValue).toBeGreaterThan(80); // At least 80% of target
-      expect(currentValue).toBeLessThanOrEqual(100);
+      // Spring should have settled close to target
+      expect(finalValue).toBeGreaterThan(95);
+      expect(finalValue).toBeLessThanOrEqual(100);
     });
 
-    it.skip("should handle spring cancellation", async () => {
-      const TestComponent = () => {
-        const [value, setValue] = createSpring(0);
+    it("should handle spring cancellation", async () => {
+      let finalValue = 0;
+      
+      await new Promise<void>((resolve) => {
+        createRoot((dispose) => {
+          const [value, setValue] = createSpring(0, {
+            stiffness: 170,
+            damping: 26,
+          });
 
-        onMount(() => {
+          // Start animation to 100
           setValue(100);
-          // Cancel early in browser environment
+          
+          // Interrupt after 100ms and change target to 50
           setTimeout(() => setValue(50), 100);
+          
+          // Check final value after animation settles
+          setTimeout(() => {
+            finalValue = value();
+            dispose();
+            resolve();
+          }, 500);
         });
+      });
 
-        return <div>{value()}</div>;
-      };
-
-      const { container } = render(() => <TestComponent />);
-
-      await sleep(300);
-
-      const div = container.querySelector("div");
-      const finalValue = parseFloat(div?.textContent || "0");
-      // More realistic browser expectations - animation might not reach exact target
-      expect(finalValue).toBeGreaterThanOrEqual(0);
-      expect(finalValue).toBeLessThanOrEqual(100);
+      // Value should have settled near 50 (the second target)
+      expect(finalValue).toBeGreaterThan(45);
+      expect(finalValue).toBeLessThanOrEqual(55);
     });
   });
 

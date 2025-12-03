@@ -37,6 +37,7 @@ export type AnySpringTarget = any;
  */
 export type AnimationState =
   | "idle" // Animation is not running
+  | "pending" // Animation is waiting for delay to complete
   | "running" // Animation is currently running
   | "paused" // Animation is paused
   | "completed" // Animation has completed
@@ -325,27 +326,16 @@ export interface AnimationOptions extends SpringOptions {
 // Utility Functions
 // =============================================================================
 
-// Normalizes spring physics parameters to the correct scale for the core engine
-// High-level API uses values like stiffness: 170, damping: 22
-// Core engine expects values like stiffness: 0.15, damping: 0.8
+// Pass through spring physics parameters unchanged.
+// The core engine (createSpring in spring.ts) already handles values like
+// stiffness: 170, damping: 26 correctly using standard spring physics formulas.
+// Previous normalization (dividing by 1000/100) was incorrect and caused
+// animations to run ~1000x too slow.
 //
-// @param options Original spring options with high-level API scale
-// @returns Normalized spring options with core engine scale
+// @param options Original spring options
+// @returns Same spring options (no transformation needed)
 const normalizeSpringParams = (options: AnimationOptions): AnimationOptions => {
-  // Deep clone to avoid mutating the original
-  const normalizedOptions = { ...options };
-
-  // Normalize stiffness (150 -> 0.15)
-  if (typeof normalizedOptions.stiffness === "number") {
-    normalizedOptions.stiffness = normalizedOptions.stiffness / 1000;
-  }
-
-  // Normalize damping (18 -> 0.18)
-  if (typeof normalizedOptions.damping === "number") {
-    normalizedOptions.damping = normalizedOptions.damping / 100;
-  }
-
-  return normalizedOptions;
+  return { ...options };
 };
 
 // Helper function to convert hex to RGB object
@@ -662,6 +652,17 @@ export function createAnimation<T extends SpringTarget>(
   // Keep track if animation is playing in reverse
   const lastDirection = { reverse: false };
 
+  // Track delay timeout for cleanup
+  let delayTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  // Helper to clear any pending delay timeout
+  const clearDelayTimeout = () => {
+    if (delayTimeoutId !== null) {
+      clearTimeout(delayTimeoutId);
+      delayTimeoutId = null;
+    }
+  };
+
   // Start animation with the specified target
   const start = (target: WidenSpringTarget<T> = processedTarget, springOpts: AnimationOptions = {}) => {
     if (IS_DEBUG_MODE) {
@@ -669,44 +670,70 @@ export function createAnimation<T extends SpringTarget>(
 
     const processedStart = deepProcessColorValues(target);
 
-    try {
-      // Diagnostic logging for state transitions
-      if (IS_DEBUG_MODE) {
+    // Determine the delay to use - springOpts.delay takes precedence over options.delay
+    const delayMs = springOpts.delay !== undefined ? springOpts.delay : (options.delay ?? 0);
+
+    // Clear any existing delay timeout before starting a new animation
+    clearDelayTimeout();
+
+    // Helper function to actually execute the spring animation
+    const executeAnimation = () => {
+      try {
+        // Diagnostic logging for state transitions
+        if (IS_DEBUG_MODE) {
+        }
+
+        // If an animation is already running this constitutes an interruption.
+        if (state() === "running") {
+          options.onInterrupt?.();
+        }
+
+        // Configure spring animation options (exclude delay since we handle it here)
+        const animationConfig: any = {
+          ...normalizedOptions,
+          ...springOpts,
+        };
+        // Remove delay from config since we're handling it at this level
+        delete animationConfig.delay;
+
+        // Optional: handle immediate mode
+        if (options.immediate) {
+          animationConfig.hard = true; // Skip physics
+        }
+
+        if (IS_DEBUG_MODE) {
+        }
+
+        // Set the spring target value – capture promise to surface errors.
+        setSpringValue(processedStart as any, animationConfig).catch((err) => {
+          options.onError?.(err);
+        });
+      } catch (e) {
+        console.error("[ANIM-ERROR] Failed to start animation:", e);
       }
+    };
 
-      // If an animation is already running this constitutes an interruption.
-      if (state() === "running") {
-        options.onInterrupt?.();
-      }
+    // Handle delay if specified
+    if (delayMs > 0) {
+      // Set state to pending while waiting for delay
+      setState("pending");
 
-      // Configure spring animation options
-      const animationConfig: any = {
-        ...normalizedOptions,
-        ...springOpts,
-      };
-
-      // Optional: handle immediate mode
-      if (options.immediate) {
-        animationConfig.hard = true; // Skip physics
-      }
-
-      if (IS_DEBUG_MODE) {
-      }
-
-      // Set the spring target value – capture promise to surface errors.
-      setSpringValue(processedStart as any, animationConfig).catch((err) => {
-        options.onError?.(err);
-      });
-
-      return controls; // Return controls for chaining
-    } catch (e) {
-      console.error("[ANIM-ERROR] Failed to start animation:", e);
-      return controls; // Return controls even on error
+      delayTimeoutId = setTimeout(() => {
+        delayTimeoutId = null;
+        executeAnimation();
+      }, delayMs);
+    } else {
+      // No delay - execute immediately
+      executeAnimation();
     }
+
+    return controls; // Return controls for chaining
   };
 
   // Stop the animation and reset
   const stop = () => {
+    // Clear any pending delay timeout
+    clearDelayTimeout();
     setState("idle");
     setIsReversed(false);
     return controls; // Return controls for chaining
@@ -786,9 +813,12 @@ export function createAnimation<T extends SpringTarget>(
 
   // Cleanup on unmount
   onCleanup(() => {
+    // Clear any pending delay timeout
+    clearDelayTimeout();
+
     // If the component unmounts (or the animation instance is replaced)
     // while the animation is still active, this counts as an interruption.
-    if (state() === "running" || state() === "paused") {
+    if (state() === "running" || state() === "paused" || state() === "pending") {
       // Notify consumers that the animation did not finish naturally.
       options.onInterrupt?.();
 

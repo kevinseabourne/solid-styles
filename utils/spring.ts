@@ -428,6 +428,47 @@ if (isServer) {
 // ---------------------------------------------------------------------------
 const GLOBAL_TEST_ENV = typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test';
 
+// ---------------------------------------------------------------------------
+// Test Mode Configuration
+// ---------------------------------------------------------------------------
+// Allows tests to control test-specific behaviors like fallback timers
+// that would otherwise interfere with verifying actual animation physics.
+interface TestModeConfig {
+  /** If true, disables the 350ms fallback that snaps animations to final value */
+  disableFallbackTimer: boolean;
+  /** If true, disables the overshoot clamping in test environment */
+  disableOvershootClamping: boolean;
+}
+
+let testModeConfig: TestModeConfig = {
+  disableFallbackTimer: false,
+  disableOvershootClamping: false,
+};
+
+/**
+ * Configure test mode behavior for spring animations.
+ * Only affects behavior when running in test environment (MODE === 'test').
+ * 
+ * @param config Configuration options
+ * @example
+ * // In your test:
+ * import { setTestModeConfig } from '../utils/spring';
+ * setTestModeConfig({ disableFallbackTimer: true });
+ */
+export function setTestModeConfig(config: Partial<TestModeConfig>): void {
+  testModeConfig = { ...testModeConfig, ...config };
+}
+
+/**
+ * Reset test mode configuration to defaults.
+ */
+export function resetTestModeConfig(): void {
+  testModeConfig = {
+    disableFallbackTimer: false,
+    disableOvershootClamping: false,
+  };
+}
+
 if (!isServer && GLOBAL_TEST_ENV) {
   if (typeof globalThis.requestAnimationFrame === "undefined") {
     globalThis.requestAnimationFrame = (cb: FrameRequestCallback): number =>
@@ -962,7 +1003,9 @@ export function createSpring<T extends SpringTarget>(
         // Enhanced fallback completion timer for the Vitest/JSDOM environment –
         // always enabled so that springs WITHOUT an onComplete callback still
         // settle to their exact target within the 500 ms assertion window.
-        if (GLOBAL_TEST_ENV) {
+        // Can be disabled via setTestModeConfig({ disableFallbackTimer: true }) for
+        // tests that need to verify actual spring physics.
+        if (GLOBAL_TEST_ENV && !testModeConfig.disableFallbackTimer) {
           const fallbackMs = 350; // Tests wait ~500 ms before settling assertions; use a shorter fallback
           setTimeout(() => {
             if (isAnimating()) {
@@ -1105,8 +1148,10 @@ export function createSpring<T extends SpringTarget>(
             // Overshoot Guard – clamp numeric overshoot that can occur with
             // large dt multipliers in the test runner. Only active in GLOBAL_TEST_ENV
             // to avoid altering production physics.
+            // Can be disabled via setTestModeConfig({ disableOvershootClamping: true })
+            // for tests that need to verify actual spring overshoot behavior.
             // ------------------------------------------------------------------
-            if (GLOBAL_TEST_ENV && typeof next_value === "number" && typeof currentTarget === "number") {
+            if (GLOBAL_TEST_ENV && !testModeConfig.disableOvershootClamping && typeof next_value === "number" && typeof currentTarget === "number") {
               const minBound = Math.min(currentSpring as any, currentTarget);
               const maxBound = Math.max(currentSpring as any, currentTarget);
               const numVal = next_value as unknown as number;

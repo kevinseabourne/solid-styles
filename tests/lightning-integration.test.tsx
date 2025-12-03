@@ -363,10 +363,50 @@ describe("Lightning CSS Integration", () => {
       console.log(`Rendered 100 components in ${renderTime.toFixed(2)}ms`);
     });
 
-    it.skip("should maintain animation performance with Lightning CSS", async () => {
-      // Skipped: animated component types need proper test setup
-      // The actual animated components work fine in real usage
-      expect(true).toBe(true);
+    it("should maintain animation performance with Lightning CSS", async () => {
+      // Test that the spring animation system performs well with many concurrent springs
+      const springCount = 50;
+      const results: number[] = [];
+      
+      const startTime = performance.now();
+      
+      await new Promise<void>((resolve) => {
+        createRoot((dispose) => {
+          const springs: Array<[() => number, (v: number) => void]> = [];
+          
+          // Create many springs
+          for (let i = 0; i < springCount; i++) {
+            const spring = createSpring(0, {
+              stiffness: 170,
+              damping: 26,
+            });
+            springs.push(spring);
+          }
+          
+          // Start all animations
+          springs.forEach(([_, setValue]) => setValue(100));
+          
+          // Check values after animation
+          setTimeout(() => {
+            springs.forEach(([value, _], i) => {
+              results[i] = value();
+            });
+            dispose();
+            resolve();
+          }, 400);
+        });
+      });
+      
+      const totalTime = performance.now() - startTime;
+      
+      // All springs should have animated
+      const completedSprings = results.filter(v => v > 90).length;
+      expect(completedSprings).toBeGreaterThan(springCount * 0.9); // At least 90% completed
+      
+      // Performance should be reasonable (< 1000ms for 50 springs)
+      expect(totalTime).toBeLessThan(1000);
+      
+      console.log(`Animation performance: ${springCount} springs in ${totalTime.toFixed(2)}ms`);
     });
   });
 

@@ -2,13 +2,13 @@
  * Styled Components for SolidJS with Lightning CSS Integration
  */
 
-import { Component, JSX, createComponent, mergeProps, splitProps, Accessor, onCleanup, createEffect, onMount } from "solid-js";
+import { Component, JSX, createComponent, mergeProps, splitProps, Accessor, onCleanup, createEffect, onMount, createSignal, createMemo } from "solid-js";
 import { Dynamic, isServer } from "solid-js/web";
 import { measureStyleApplication } from "./performance";
 
 // Import the spring animation and animated component from the correct paths
 import { createSpring } from "../utils/spring";
-// Import animation components from the barrel export
+// Import animation components - will be loaded lazily on client only
 // import { animated } from "../animation";
 // Import Lightning CSS integration
 import { enhanceMakeStyled } from "../lightning/runtime/enhanced-styled";
@@ -1050,122 +1050,74 @@ function styled(tag: any) {
     }
 
     // ======= CREATE STANDARD STYLED COMPONENT =======
-    // Preload animation system asynchronously for potential future use
-    // This happens once per styled component definition, not per render
-    if (!isServer) {
-      loadAnimationSystem();
-    }
-    
     // ======= STANDARD STYLED COMPONENT =======
     const StyledComponent = (props: any) => {
-      // ======= AUTOMATIC ANIMATION DETECTION =======
-      // Skip animation detection on server-side
-      if (!isServer && hasAnimationProps(props)) {
-        // Animation props detected - check if animation system is loaded
-        const animatedWrapper = animationSystemCache.animated;
-        
-        if (animatedWrapper) {
-          // Animation system is loaded - create animated version
-          // Use the base styled component rendering logic directly
-          const BaseComponent = createBaseStyledComponent(tag, strings, args);
-          const AnimatedComponent = animatedWrapper(BaseComponent);
-          // Render with all props (animated() will handle animation props)
-          return createComponent(AnimatedComponent, props);
-        } else {
-          // Animation system not loaded yet - render without animations for now
-          // The loadAnimationSystem() call above will load it for next render
-          if (process.env.NODE_ENV === 'development') {
-            console.warn(
-              '[SOLID-STYLES] Animation props detected but animation system not loaded yet. ' +
-              'Animations will be available on next render. ' +
-              'To avoid this warning, import animation system explicitly: ' +
-              'import "solid-styles/animation";'
-            );
-          }
-          // Fall through to standard rendering
-        }
-      }
+      // DISABLED: Automatic animation detection causes SSR crashes and event handler issues
+      // Users must explicitly use animated() wrapper from solid-styles/animation
+      // if (!isServer && hasAnimationProps(props)) {
+      //   ...
+      // }
       
       // ======= STANDARD STYLED COMPONENT PATH (No Animations) =======
       // Split out the props that Solid Styles handles internally.
       const [local, rest] = splitProps(props, ["as", "class", "className", "style", "ref"]);
 
-      // Determine the component to render. Use the `as` prop if it's provided, otherwise fall back to the original tag.
-      const componentToRender = local.as || tag;
+      const renderBase = () => {
+        const componentToRender = local.as || tag;
 
-      // --- Class Name and Style Generation ---
-      // Only log in development mode, not in tests
-      // Processing styles
-
-      let staticClassName: string | null = null;
-      try {
-        staticClassName = resolvePropsToClass(rest);
-        // Static class resolved
-      } catch {
-        // Error resolving static class, falling back to css()
-      }
-
-    const rawClassName = staticClassName ?? css(strings, ...args);
-    // Class name generated
-
-      // Tests for the enhanced API expect Styled Components' class names to start with `sc-`.
-      // We therefore expose a *public* class name with that prefix while keeping the raw class
-      // name (used inside the generated <style>) intact.  This does not impact selector matching
-      // because we attach **both** class names to the element.
-      const finalClassName = `sc-${rawClassName}`;
-
-      let cssVariables: Record<string, string> = {};
-      if (!staticClassName) {
-      try {
-        const cssVariableManager = getCSSVariableManager();
-        cssVariables = cssVariableManager.generateComponentVariables(key, rest);
-        // CSS variables generated
-      } catch (error) {
-        // Error generating CSS variables
-      }
-      }
-
-      // --- Prop Merging ---
-
-      // Combine the generated class with any class passed by the user.
-      const mergedClassName = [rawClassName, finalClassName, local.class, local.className].filter(Boolean).join(" ");
-
-      // Create a ref handler that applies CSS variables and calls the user's ref.
-      const handleRef = (el: HTMLElement) => {
-        if (el && Object.keys(cssVariables).length > 0) {
+        let staticClassName: string | null = null;
         try {
-          const cssVariableManager = getCSSVariableManager();
-          cssVariableManager.applyCSSVariables(el, cssVariables);
-          // CSS variables applied
-        } catch (error) {
-          // Error applying CSS variables
+          staticClassName = resolvePropsToClass(rest);
+        } catch {
+          // fall back to css()
         }
+
+        const rawClassName = staticClassName ?? css(strings, ...args);
+        const finalClassName = `sc-${rawClassName}`;
+
+        let cssVariables: Record<string, string> = {};
+        if (!staticClassName) {
+          try {
+            const cssVariableManager = getCSSVariableManager();
+            cssVariables = cssVariableManager.generateComponentVariables(key, rest);
+          } catch {
+            // ignore
+          }
         }
-        if (typeof local.ref === "function") local.ref(el);
+
+        const mergedClassName = [rawClassName, finalClassName, local.class, local.className]
+          .filter(Boolean)
+          .join(" ");
+
+        const handleRef = (el: HTMLElement) => {
+          if (el && Object.keys(cssVariables).length > 0) {
+            try {
+              const cssVariableManager = getCSSVariableManager();
+              cssVariableManager.applyCSSVariables(el, cssVariables);
+            } catch {
+              // ignore
+            }
+          }
+          if (typeof local.ref === "function") local.ref(el);
+        };
+
+        const filteredProps = propertyFilter ? propertyFilter(rest) : rest;
+
+        const mergedProps = mergeProps(filteredProps, {
+          get class() {
+            return mergedClassName;
+          },
+          style: local.style,
+          ref: handleRef,
+        });
+
+        return createComponent(Dynamic, {
+          component: componentToRender,
+          ...mergedProps,
+        });
       };
 
-      // Filter props if a property filter is configured.
-      const filteredProps = propertyFilter ? propertyFilter(rest) : rest;
-
-      const mergedProps = mergeProps(filteredProps, {
-        get class() {
-          return mergedClassName;
-        },
-        style: local.style,
-        ref: handleRef,
-      });
-
-      // --- Rendering ---
-
-      // Use Solid's <Dynamic> component to render the correct element (tag or `as` prop).
-      // We forward the children **as-is** to preserve reactivity.  Solid will
-      // automatically track any signal-based expressions passed as children
-      // and update the DOM when they change.
-
-      return createComponent(Dynamic, {
-        component: componentToRender,
-        ...mergedProps,
-      });
+      return renderBase();
     };
 
     // Cache the component for future use

@@ -4,6 +4,22 @@ import path from "path";
 import solid from "vite-plugin-solid";
 import { playwright } from "@vitest/browser-playwright";
 
+// Determine which browsers to test based on environment
+// BROWSER env var can be: 'chromium' (default), 'firefox', 'webkit', 'all'
+const browserEnv = process.env.BROWSER || 'chromium';
+
+// Build browser instances array based on configuration
+const getBrowserInstances = () => {
+  if (browserEnv === 'all') {
+    return [
+      { browser: 'chromium' as const },
+      { browser: 'firefox' as const },
+      { browser: 'webkit' as const },  // Safari/WebKit
+    ];
+  }
+  return [{ browser: browserEnv as 'chromium' | 'firefox' | 'webkit' }];
+};
+
 export default defineConfig({
   plugins: [solid()],
   resolve: {
@@ -18,14 +34,10 @@ export default defineConfig({
     // Use browser environment by default - realistic testing
     browser: {
       enabled: true,
-      provider: playwright({ browser: "chromium" }),
-      name: "chromium",
+      provider: playwright({ browser: browserEnv === 'all' ? 'chromium' : browserEnv as any }),
+      name: browserEnv === 'all' ? 'chromium' : browserEnv,
       headless: process.env.CI !== "false",
-      instances: [
-        {
-          browser: "chromium",
-        },
-      ],
+      instances: getBrowserInstances(),
       // Browser configuration optimized for testing
       api: {
         port: 9080,

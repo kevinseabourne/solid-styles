@@ -156,7 +156,8 @@ export function useAnimation<T extends SpringTarget>(config: AnimationConfig<T>)
           onInterrupt?.();
         }
         // Reverse animation when condition becomes false
-        controls.start(from as WidenSpringTarget<T>);
+        // CRITICAL FIX: Bypass delay for reverse animations - reverse should be immediate
+        (controls.start as any)(from as WidenSpringTarget<T>, { delay: 0 });
         logAnimationEvent("animation", "reverse", { from, active });
       } else if (hasStartedValue && wasActiveValue) {
         // CRITICAL FIX: Call onInterrupt when animation stops due to trigger change

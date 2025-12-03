@@ -722,18 +722,8 @@ const registerAnimation = (id: string, animation: any, config: any) => {
                 if (anim.config.precision !== undefined) springConfig.precision = anim.config.precision;
 
 
-                // CRITICAL FIX: Normalize config before passing to .start()
-                // .start() options bypass spring-bridge normalization!
-                const normalizedConfig: any = { ...springConfig };
-                if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-                  normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-                }
-                if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-                  normalizedConfig.damping = normalizedConfig.damping / 100;
-                }
-
                 anim.controls.start(anim.config.to, {
-                  ...normalizedConfig,
+                  ...springConfig,
                   hard: false, // Explicitly use spring physics
                 });
 
@@ -756,17 +746,8 @@ const registerAnimation = (id: string, animation: any, config: any) => {
                 if (anim.config.damping !== undefined) springConfig.damping = anim.config.damping;
                 if (anim.config.precision !== undefined) springConfig.precision = anim.config.precision;
 
-                // CRITICAL FIX: Normalize config before passing to .start()
-                const normalizedConfig: any = { ...springConfig };
-                if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-                  normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-                }
-                if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-                  normalizedConfig.damping = normalizedConfig.damping / 100;
-                }
-
                 anim.controls.start(anim.config.from, {
-                  ...normalizedConfig,
+                  ...springConfig,
                   hard: false, // Ensure spring physics are used
                 });
               }
@@ -829,7 +810,8 @@ const registerAnimation = (id: string, animation: any, config: any) => {
 const setupDirectEventHandlers = (el: HTMLElement) => {
   const testId = getTestId(el);
   if (!testId) {
-    console.warn("[ANIM-WARN] Element without test ID (data-testid or data-test-id) cannot use direct event handlers");
+    // Elements without test IDs can still use animations via the reactive listener setup (lines 2113-2220)
+    // Just skip the legacy trigger registry system
     return () => {};
   }
 
@@ -923,18 +905,11 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             // Ensure we have a valid object
             springConfig = springConfig || {};
 
-            // CRITICAL FIX: Normalize config before passing to .start()
-            // .start() options bypass spring-bridge normalization!
-            const normalizedConfig: any = { ...springConfig };
-            if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-              normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-            }
-            if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-              normalizedConfig.damping = normalizedConfig.damping / 100;
-            }
-
+            // CRITICAL FIX: Include delay from config for forward animations
+            const delayMs = configObj.config?.delay ?? configObj.delay ?? 0;
             animation.controls.start(animation.config.to, {
-              ...normalizedConfig,
+              ...springConfig,
+              delay: delayMs,
               hard: false, // Explicitly disable immediate mode
             });
           } catch (err) {
@@ -1021,18 +996,10 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
               // Ensure we have a valid object
               springConfig = springConfig || {};
 
-              // CRITICAL FIX: Normalize config before passing to .start()
-              // .start() options bypass spring-bridge normalization!
-              const normalizedConfig: any = { ...springConfig };
-              if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-                normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-              }
-              if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-                normalizedConfig.damping = normalizedConfig.damping / 100;
-              }
-
+              // CRITICAL FIX: Bypass delay for reverse animations - reverse should be immediate
               animation.controls.start(animation.config.from, {
-                ...normalizedConfig,
+                ...springConfig,
+                delay: 0, // No delay for reverse animations
                 hard: false, // Ensure spring physics are used
               });
             } catch (err) {
@@ -1128,18 +1095,6 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
               };
             }
 
-            // Normalize spring parameters exactly like hover does
-            const normalizedConfig = { ...springConfig };
-
-            // Only normalize if values are in high-level API scale
-            if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-              normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-            }
-
-            if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-              normalizedConfig.damping = normalizedConfig.damping / 100;
-            }
-
             // CRITICAL FIX: Transform color values before animation
             const processColors = (value: any): any => {
               // Handle null/undefined
@@ -1200,9 +1155,9 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
             // Determine which animation target to use based on click state
             const target = newState ? toValueProcessed : fromValueProcessed;
 
-            // Start animation with correctly normalized physics configuration
+            // Start animation with spring physics configuration
             animation.controls.start(target, {
-              ...normalizedConfig,
+              ...springConfig,
               hard: false, // Ensure spring physics are used (not immediate)
             });
 
@@ -1277,21 +1232,12 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
                         };
                       }
 
-                      // Normalize spring parameters
-                      const normalizedConfig = { ...springConfig };
-                      if (normalizedConfig.stiffness && normalizedConfig.stiffness > 1) {
-                        normalizedConfig.stiffness = normalizedConfig.stiffness / 1000;
-                      }
-                      if (normalizedConfig.damping && normalizedConfig.damping > 1) {
-                        normalizedConfig.damping = normalizedConfig.damping / 100;
-                      }
-
                       // CRITICAL FIX: Transform color values before animation
                       const fromValueProcessed = processColors(animation.config.from);
 
                       // Start animation to "from" state with spring physics
                       animation.controls.start(fromValueProcessed, {
-                        ...normalizedConfig,
+                        ...springConfig,
                         hard: false, // Ensure spring physics are used
                       });
 
@@ -1317,6 +1263,256 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
 
   };
 
+  // CRITICAL FIX: Handle focus events for "focus" trigger type
+  const handleDirectFocus = (e: FocusEvent) => {
+    const targetElement = e.currentTarget as HTMLElement;
+    const targetTestId = getTestId(targetElement);
+
+    if (!targetTestId) return;
+
+    // Set a data attribute for debugging
+    targetElement.setAttribute("data-focus-state", "true");
+
+    // Use the unified trigger registry if available
+    const triggerEntry = triggerRegistry.get(targetTestId);
+    if (triggerEntry) {
+      triggerEntry.setActive(true);
+    }
+
+    // CRITICAL FIX: Always iterate animations directly regardless of trigger registry state
+    // This ensures animations work even if registration timing varies
+    animationRegistry.forEach((animation, id) => {
+      if (
+        animation.elementId === targetTestId &&
+        animation.controls?.setFocusState &&
+        typeof animation.controls.setFocusState === "function"
+      ) {
+        animation.controls.setFocusState(true);
+      }
+    });
+
+    // Directly control animations for focus trigger
+    animationRegistry.forEach((animation, id) => {
+      if (
+        animation.elementId === targetTestId &&
+        animation.config &&
+        (animation.config.when === "focus" ||
+          (Array.isArray(animation.config.when) && animation.config.when.includes("focus")))
+      ) {
+        try {
+          const configObj = animation.config || {};
+          let springConfig;
+
+          if (configObj.config && typeof configObj.config === "object") {
+            springConfig = configObj.config;
+          } else if (configObj.stiffness !== undefined || configObj.damping !== undefined) {
+            springConfig = {
+              stiffness: configObj.stiffness,
+              damping: configObj.damping,
+              precision: configObj.precision,
+            };
+          } else {
+            springConfig = {
+              stiffness: 170,
+              damping: 22,
+              precision: 0.001,
+            };
+          }
+
+          const delayMs = configObj.config?.delay ?? configObj.delay ?? 0;
+          animation.controls.start(animation.config.to, {
+            ...springConfig,
+            delay: delayMs,
+            hard: false,
+          });
+        } catch (err) {
+          console.error(`[ANIM-ERROR] Failed to start focus animation ${id}:`, err);
+        }
+      }
+    });
+  };
+
+  const handleDirectBlur = (e: FocusEvent) => {
+    const targetElement = e.currentTarget as HTMLElement;
+    const targetTestId = getTestId(targetElement);
+
+    if (!targetTestId) return;
+
+    // Set a data attribute for debugging
+    targetElement.setAttribute("data-focus-state", "false");
+
+    // Use the unified trigger registry if available
+    const triggerEntry = triggerRegistry.get(targetTestId);
+    if (triggerEntry) {
+      triggerEntry.setActive(false);
+    }
+
+    // CRITICAL FIX: Always iterate animations directly regardless of trigger registry state
+    animationRegistry.forEach((animation, id) => {
+      if (
+        animation.elementId === targetTestId &&
+        animation.setFocusState &&
+        typeof animation.setFocusState === "function"
+      ) {
+        animation.setFocusState(false);
+      }
+    });
+
+    // Directly control animations for focus trigger
+    animationRegistry.forEach((animation, id) => {
+      if (
+        animation.elementId === targetTestId &&
+        animation.config &&
+        (animation.config.when === "focus" ||
+          (Array.isArray(animation.config.when) && animation.config.when.includes("focus")))
+      ) {
+        if (animation.config.reverseOnExit !== false) {
+          try {
+            const configObj = animation.config || {};
+            let springConfig;
+
+            if (configObj.config && typeof configObj.config === "object") {
+              springConfig = configObj.config;
+            } else if (configObj.stiffness !== undefined || configObj.damping !== undefined) {
+              springConfig = {
+                stiffness: configObj.stiffness,
+                damping: configObj.damping,
+                precision: configObj.precision,
+              };
+            } else {
+              springConfig = {
+                stiffness: 170,
+                damping: 22,
+                precision: 0.001,
+              };
+            }
+
+            animation.controls.start(animation.config.from, {
+              ...springConfig,
+              delay: 0,
+              hard: false,
+            });
+          } catch (err) {
+            console.error(`[ANIM-ERROR] Failed to reverse focus animation ${id}:`, err);
+          }
+        }
+      }
+    });
+  };
+
+  // CRITICAL FIX: Handle active (mousedown/mouseup) events for "active" trigger type
+  const handleDirectMouseDown = (e: MouseEvent) => {
+    const targetElement = e.currentTarget as HTMLElement;
+    const targetTestId = getTestId(targetElement);
+
+    if (!targetTestId) return;
+
+    // Set a data attribute for debugging
+    targetElement.setAttribute("data-active-state", "true");
+
+    // Use the unified trigger registry if available
+    const triggerEntry = triggerRegistry.get(targetTestId);
+    if (triggerEntry) {
+      triggerEntry.setActive(true);
+    }
+
+    // CRITICAL FIX: Always iterate animations directly regardless of trigger registry state
+    animationRegistry.forEach((animation, id) => {
+      if (
+        animation.elementId === targetTestId &&
+        animation.config &&
+        (animation.config.when === "active" ||
+          (Array.isArray(animation.config.when) && animation.config.when.includes("active")))
+      ) {
+        try {
+          const configObj = animation.config || {};
+          let springConfig;
+
+          if (configObj.config && typeof configObj.config === "object") {
+            springConfig = configObj.config;
+          } else if (configObj.stiffness !== undefined || configObj.damping !== undefined) {
+            springConfig = {
+              stiffness: configObj.stiffness,
+              damping: configObj.damping,
+              precision: configObj.precision,
+            };
+          } else {
+            springConfig = {
+              stiffness: 300,
+              damping: 25,
+              precision: 0.001,
+            };
+          }
+
+          animation.controls.start(animation.config.to, {
+            ...springConfig,
+            delay: 0,
+            hard: false,
+          });
+        } catch (err) {
+          console.error(`[ANIM-ERROR] Failed to start active animation ${id}:`, err);
+        }
+      }
+    });
+  };
+
+  const handleDirectMouseUp = (e: MouseEvent) => {
+    const targetElement = e.currentTarget as HTMLElement;
+    const targetTestId = getTestId(targetElement);
+
+    if (!targetTestId) return;
+
+    // Set a data attribute for debugging
+    targetElement.setAttribute("data-active-state", "false");
+
+    // Use the unified trigger registry if available
+    const triggerEntry = triggerRegistry.get(targetTestId);
+    if (triggerEntry) {
+      triggerEntry.setActive(false);
+    }
+
+    // CRITICAL FIX: Always iterate animations directly regardless of trigger registry state
+    animationRegistry.forEach((animation, id) => {
+      if (
+        animation.elementId === targetTestId &&
+        animation.config &&
+        (animation.config.when === "active" ||
+          (Array.isArray(animation.config.when) && animation.config.when.includes("active")))
+      ) {
+        if (animation.config.reverseOnExit !== false) {
+          try {
+            const configObj = animation.config || {};
+            let springConfig;
+
+            if (configObj.config && typeof configObj.config === "object") {
+              springConfig = configObj.config;
+            } else if (configObj.stiffness !== undefined || configObj.damping !== undefined) {
+              springConfig = {
+                stiffness: configObj.stiffness,
+                damping: configObj.damping,
+                precision: configObj.precision,
+              };
+            } else {
+              springConfig = {
+                stiffness: 300,
+                damping: 25,
+                precision: 0.001,
+              };
+            }
+
+            animation.controls.start(animation.config.from, {
+              ...springConfig,
+              delay: 0,
+              hard: false,
+            });
+          } catch (err) {
+            console.error(`[ANIM-ERROR] Failed to reverse active animation ${id}:`, err);
+          }
+        }
+      }
+    });
+  };
+
   // CRITICAL FIX: Check if this element already has event handlers to prevent duplication
   const elementId = getTestId(el) || "";
   if (elementsWithEventHandlers.has(elementId)) {
@@ -1324,10 +1520,14 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     return () => {};
   }
 
-  // Add direct event handlers
+  // Add direct event handlers for all trigger types
   el.addEventListener("mouseenter", handleDirectMouseEnter);
   el.addEventListener("mouseleave", handleDirectMouseLeave);
   el.addEventListener("click", handleDirectClick);
+  el.addEventListener("focus", handleDirectFocus);
+  el.addEventListener("blur", handleDirectBlur);
+  el.addEventListener("mousedown", handleDirectMouseDown);
+  el.addEventListener("mouseup", handleDirectMouseUp);
 
   // Mark this element as having event handlers
   if (elementId) {
@@ -1339,6 +1539,10 @@ const setupDirectEventHandlers = (el: HTMLElement) => {
     el.removeEventListener("mouseenter", handleDirectMouseEnter);
     el.removeEventListener("mouseleave", handleDirectMouseLeave);
     el.removeEventListener("click", handleDirectClick);
+    el.removeEventListener("focus", handleDirectFocus);
+    el.removeEventListener("blur", handleDirectBlur);
+    el.removeEventListener("mousedown", handleDirectMouseDown);
+    el.removeEventListener("mouseup", handleDirectMouseUp);
 
     // Remove from tracked elements on cleanup
     if (elementId) {
@@ -1352,6 +1556,17 @@ const clickedStates = new Map<string, boolean>();
 
 // Track elements that already have event handlers to avoid duplication
 const elementsWithEventHandlers = new Set<string>();
+
+/**
+ * Reset all global animation state. Useful for test isolation.
+ * Call this in beforeEach() to ensure clean state between tests.
+ */
+export function resetAnimationState(): void {
+  animationRegistry.clear();
+  triggerRegistry.clear();
+  clickedStates.clear();
+  elementsWithEventHandlers.clear();
+}
 
 // Helper function to convert hex color to RGB object
 const hexToRgb = (hex: string) => {
@@ -2112,14 +2327,66 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
 
           // CRITICAL FIX: Setup direct element monitoring for ALL animation trigger types
           // This ensures ALL animations have working triggers, not just hover
-          if (triggerType === "focus" || (Array.isArray(triggerType) && triggerType.includes("focus"))) {
-            // Focus/blur event monitoring - spring system will handle the animation
-            element.addEventListener("focus", () => {
-              setManualFocused(true);
-            });
+          
+          // Setup hover event listeners
+          if (triggerType === "hover" || (Array.isArray(triggerType) && triggerType.includes("hover"))) {
+            const handleMouseEnter = () => setManualHovered(true);
+            const handleMouseLeave = () => setManualHovered(false);
 
-            element.addEventListener("blur", () => {
-              setManualFocused(false);
+            element.addEventListener("mouseenter", handleMouseEnter);
+            element.addEventListener("mouseleave", handleMouseLeave);
+
+            onCleanup(() => {
+              element.removeEventListener("mouseenter", handleMouseEnter);
+              element.removeEventListener("mouseleave", handleMouseLeave);
+            });
+          }
+          
+          // Setup click event listeners
+          if (triggerType === "click" || (Array.isArray(triggerType) && triggerType.includes("click"))) {
+            const handleClick = () => {
+              const currentState = !isManualClicked();
+              setManualClicked(currentState);
+            };
+
+            element.addEventListener("click", handleClick);
+
+            onCleanup(() => {
+              element.removeEventListener("click", handleClick);
+            });
+          }
+          
+          // Setup active (mousedown/mouseup) event listeners
+          if (triggerType === "active" || (Array.isArray(triggerType) && triggerType.includes("active"))) {
+            const handleMouseDown = () => setManualClicked(true);
+            const handleMouseUp = () => setManualClicked(false);
+
+            element.addEventListener("mousedown", handleMouseDown);
+            element.addEventListener("mouseup", handleMouseUp);
+            element.addEventListener("mouseleave", handleMouseUp); // Release on mouse leave
+
+            onCleanup(() => {
+              element.removeEventListener("mousedown", handleMouseDown);
+              element.removeEventListener("mouseup", handleMouseUp);
+              element.removeEventListener("mouseleave", handleMouseUp);
+            });
+          }
+          
+          // Setup focus event listeners
+          if (triggerType === "focus" || (Array.isArray(triggerType) && triggerType.includes("focus"))) {
+            const handleFocusIn = () => setManualFocused(true);
+            const handleFocusOut = () => setManualFocused(false);
+
+            element.addEventListener("focus", handleFocusIn);
+            element.addEventListener("focusin", handleFocusIn);
+            element.addEventListener("blur", handleFocusOut);
+            element.addEventListener("focusout", handleFocusOut);
+
+            onCleanup(() => {
+              element.removeEventListener("focus", handleFocusIn);
+              element.removeEventListener("focusin", handleFocusIn);
+              element.removeEventListener("blur", handleFocusOut);
+              element.removeEventListener("focusout", handleFocusOut);
             });
           }
 
@@ -2193,6 +2460,9 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
               } else if (triggerType === "focus") {
                 trigger = isManualFocused;
               } else if (triggerType === "click") {
+                trigger = isManualClicked;
+              } else if (triggerType === "active") {
+                // Active uses the same signal as click (for mousedown/up)
                 trigger = isManualClicked;
               } else if (triggerType === "mount") {
                 trigger = isManualMounted;
@@ -2434,9 +2704,14 @@ export function animated<T extends keyof JSX.IntrinsicElements | Component<any>>
                       animElement.style[key] = value;
                     }
                   } else {
-                    // Standard property, apply directly
-                    // @ts-ignore - Dynamic style property assignment
-                    animElement.style[key] = value;
+                    // Standard property, ensure numeric dimensions receive px units
+                    if (typeof value === "number" && isDimensionProperty(key)) {
+                      // @ts-ignore - Dynamic style property assignment
+                      animElement.style[key as any] = `${value}px`;
+                    } else {
+                      // @ts-ignore - Dynamic style property assignment
+                      animElement.style[key as any] = value;
+                    }
                   }
 
                   // Verify it was actually set

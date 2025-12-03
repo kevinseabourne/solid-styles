@@ -1,6 +1,6 @@
 {
   "name": "solid-styles",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "description": "Zero-runtime styled components for SolidJS with Lightning CSS optimization and spring animations. Production-ready CSS-in-JS with 100% test coverage.",
   "keywords": [
     "solidjs",
@@ -80,6 +80,7 @@
     "build:old": "mkdir -p dist && cp -r src animation utils lightning scripts dist/ && cp lightning-setup.ts README.md LICENSE dist/ 2>/dev/null || true",
     "build:types": "tsc --emitDeclarationOnly",
     "test": "vitest",
+    "test:run": "vitest run",
     "test:ssr": "vitest run --config vitest.config.ssr.ts",
     "test:coverage": "vitest run --coverage",
     "test:benchmark": "vitest run tests/benchmark.test.ts --browser.enabled=false",
@@ -87,6 +88,11 @@
     "test:headless": "vitest run --browser.headless=true",
     "test:ui": "vitest --ui",
     "test:jsdom": "vitest run --browser.enabled=false --environment=jsdom",
+    "test:firefox": "cross-env BROWSER=firefox vitest run",
+    "test:webkit": "cross-env BROWSER=webkit vitest run",
+    "test:safari": "cross-env BROWSER=webkit vitest run",
+    "test:all-browsers": "cross-env BROWSER=all vitest run",
+    "test:cross-browser": "npm run test:run && npm run test:firefox && npm run test:webkit",
     "lint": "eslint src/**/*.{ts,tsx} --fix",
     "type-check": "tsc --noEmit",
     "dev": "vinxi dev",

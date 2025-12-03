@@ -86,13 +86,10 @@ export function lightningCSSPlugin(config: Partial<LightningCSSConfig> = {}): Vi
         // Store extracted styles
         extractedStyles.set(id, styles);
 
-        // Transform the component code to use runtime resolver
-        const transformedCode = transformComponentCode(code, components);
-
-        return {
-          code: transformedCode,
-          map: null,
-        };
+        // IMPORTANT: Return null to preserve original code
+        // The plugin extracts metadata for CSS generation but does NOT transform the runtime code
+        // This ensures styled components remain functional while we build optimization data
+        return null;
       } catch (error) {
         console.error(`Error processing ${id}:`, error);
         return null;
