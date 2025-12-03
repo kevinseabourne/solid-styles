@@ -31,8 +31,8 @@ importers:
         specifier: 0.8.10
         version: 0.8.10(solid-js@1.9.7)
       '@types/node':
-        specifier: ^22.16.1
-        version: 22.16.1
+        specifier: ^24.10.0
+        version: 24.10.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.36.0
         version: 8.36.0(@typescript-eslint/parser@8.36.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)(typescript@5.8.3)
@@ -41,13 +41,13 @@ importers:
         version: 8.36.0(eslint@8.57.1)(typescript@5.8.3)
       '@vitest/browser':
         specifier: ^4.0.8
-        version: 4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1))
+        version: 4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)
       '@vitest/browser-playwright':
         specifier: ^4.0.8
-        version: 4.0.8(playwright@1.56.1)(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)
+        version: 4.0.8(playwright@1.56.1)(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)
       '@vitest/coverage-v8':
         specifier: ^4.0.8
-        version: 4.0.8(@vitest/browser@4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)))(vitest@4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1))
+        version: 4.0.8(@vitest/browser@4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8))(vitest@4.0.8)
       '@vitest/ui':
         specifier: ^4.0.8
         version: 4.0.8(vitest@4.0.8)
@@ -98,16 +98,16 @@ importers:
         version: 5.8.3
       vinxi:
         specifier: ^0.4.3
-        version: 0.4.3(@types/node@22.16.1)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
+        version: 0.4.3(@types/node@24.10.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
       vite:
         specifier: ^7.2.2
-        version: 7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
+        version: 7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
       vite-plugin-solid:
         specifier: 2.11.6
-        version: 2.11.6(solid-js@1.9.7)(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
+        version: 2.11.6(solid-js@1.9.7)(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
       vitest:
         specifier: ^4.0.8
-        version: 4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
+        version: 4.0.8(@types/node@24.10.0)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
 
 packages:
 
@@ -985,8 +985,8 @@ packages:
   '@types/node@20.19.24':
     resolution: {integrity: sha512-FE5u0ezmi6y9OZEzlJfg37mqqf6ZDSF2V/NLjUyGrR9uTZ7Sb9F7bLNZ03S4XVUNRWGA7Ck4c1kK+YnuWjl+DA==}
 
-  '@types/node@22.16.1':
-    resolution: {integrity: sha512-oaNE4MzsA6uO7HcsjUvqzz19lYIRsV6I1Dc6iOvgwYYDiOeF7/9b2E/PE0UW2ccwpgWPVUedjltYXQXVKFd4EA==}
+  '@types/node@24.10.0':
+    resolution: {integrity: sha512-qzQZRBqkFsYyaSWXuEHc2WR9c0a0CXwiE5FWUvn7ZM+vdy1uZLfCunD38UzhuB7YN/J11ndbDBcTmOdxJo9Q7A==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -3469,6 +3469,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   spawndamnit@3.0.1:
     resolution: {integrity: sha512-MmnduQUuHCoFckZoWnXsTg7JaiLBJrKFj9UI2MbRPGaJeVpsLcVBu6P/IGZovziM/YBsellCmsprgNA+w0CzVg==}
@@ -3758,6 +3759,9 @@ packages:
 
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
+
+  undici-types@7.16.0:
+    resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
   unenv@1.10.0:
     resolution: {integrity: sha512-wY5bskBQFL9n3Eca5XnhH6KbUo/tfvkwm9OpcdCvLaeA7piBNbavbOKJySEwQ1V0RH6HvNlSAFRTpvTqgKRQXQ==}
@@ -5062,9 +5066,9 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/node@22.16.1':
+  '@types/node@24.10.0':
     dependencies:
-      undici-types: 6.21.0
+      undici-types: 7.16.0
 
   '@types/normalize-package-data@2.4.4': {}
 
@@ -5078,7 +5082,7 @@ snapshots:
 
   '@types/yauzl@2.10.3':
     dependencies:
-      '@types/node': 22.16.1
+      '@types/node': 24.10.0
     optional: true
 
   '@typescript-eslint/eslint-plugin@8.36.0(@typescript-eslint/parser@8.36.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)(typescript@5.8.3)':
@@ -5257,29 +5261,29 @@ snapshots:
     transitivePeerDependencies:
       - uWebSockets.js
 
-  '@vitest/browser-playwright@4.0.8(playwright@1.56.1)(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)':
+  '@vitest/browser-playwright@4.0.8(playwright@1.56.1)(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)':
     dependencies:
-      '@vitest/browser': 4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1))
-      '@vitest/mocker': 4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
+      '@vitest/browser': 4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)
+      '@vitest/mocker': 4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
       playwright: 1.56.1
       tinyrainbow: 3.0.3
-      vitest: 4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
+      vitest: 4.0.8(@types/node@24.10.0)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
     transitivePeerDependencies:
       - bufferutil
       - msw
       - utf-8-validate
       - vite
 
-  '@vitest/browser@4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1))':
+  '@vitest/browser@4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)':
     dependencies:
-      '@vitest/mocker': 4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
+      '@vitest/mocker': 4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
       '@vitest/utils': 4.0.8
       magic-string: 0.30.21
       pixelmatch: 7.1.0
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.0.3
-      vitest: 4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
+      vitest: 4.0.8(@types/node@24.10.0)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
@@ -5287,7 +5291,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@4.0.8(@vitest/browser@4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)))(vitest@4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1))':
+  '@vitest/coverage-v8@4.0.8(@vitest/browser@4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8))(vitest@4.0.8)':
     dependencies:
       '@bcoe/v8-coverage': 1.0.2
       '@vitest/utils': 4.0.8
@@ -5300,9 +5304,9 @@ snapshots:
       magicast: 0.5.1
       std-env: 3.10.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
+      vitest: 4.0.8(@types/node@24.10.0)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
     optionalDependencies:
-      '@vitest/browser': 4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1))
+      '@vitest/browser': 4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)
     transitivePeerDependencies:
       - supports-color
 
@@ -5315,13 +5319,13 @@ snapshots:
       chai: 6.2.0
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))':
+  '@vitest/mocker@4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))':
     dependencies:
       '@vitest/spy': 4.0.8
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
+      vite: 7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
 
   '@vitest/pretty-format@4.0.8':
     dependencies:
@@ -5349,7 +5353,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
+      vitest: 4.0.8(@types/node@24.10.0)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1)
 
   '@vitest/utils@4.0.8':
     dependencies:
@@ -8010,6 +8014,8 @@ snapshots:
 
   undici-types@6.21.0: {}
 
+  undici-types@7.16.0: {}
+
   unenv@1.10.0:
     dependencies:
       consola: 3.4.2
@@ -8133,7 +8139,7 @@ snapshots:
       spdx-correct: 3.2.0
       spdx-expression-parse: 3.0.1
 
-  vinxi@0.4.3(@types/node@22.16.1)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1):
+  vinxi@0.4.3(@types/node@24.10.0)(db0@0.3.2)(ioredis@5.6.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1):
     dependencies:
       '@babel/core': 7.28.0
       '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.28.0)
@@ -8167,7 +8173,7 @@ snapshots:
       unctx: 2.4.1
       unenv: 1.10.0
       unstorage: 1.16.0(db0@0.3.2)(ioredis@5.6.1)
-      vite: 7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
+      vite: 7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
       zod: 3.25.76
     transitivePeerDependencies:
       - '@azure/app-configuration'
@@ -8212,7 +8218,7 @@ snapshots:
       - xml2js
       - yaml
 
-  vite-plugin-solid@2.11.6(solid-js@1.9.7)(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)):
+  vite-plugin-solid@2.11.6(solid-js@1.9.7)(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)):
     dependencies:
       '@babel/core': 7.28.0
       '@types/babel__core': 7.20.5
@@ -8220,12 +8226,12 @@ snapshots:
       merge-anything: 5.1.7
       solid-js: 1.9.7
       solid-refresh: 0.6.3(solid-js@1.9.7)
-      vite: 7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
-      vitefu: 1.1.1(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
+      vite: 7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
+      vitefu: 1.1.1(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
     transitivePeerDependencies:
       - supports-color
 
-  vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1):
+  vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1):
     dependencies:
       esbuild: 0.25.6
       fdir: 6.5.0(picomatch@4.0.3)
@@ -8234,20 +8240,20 @@ snapshots:
       rollup: 4.44.2
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 22.16.1
+      '@types/node': 24.10.0
       fsevents: 2.3.3
       jiti: 2.4.2
       lightningcss: 1.30.1
       terser: 5.43.1
 
-  vitefu@1.1.1(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)):
+  vitefu@1.1.1(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)):
     optionalDependencies:
-      vite: 7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
+      vite: 7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
 
-  vitest@4.0.8(@types/node@22.16.1)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1):
+  vitest@4.0.8(@types/node@24.10.0)(@vitest/browser-playwright@4.0.8)(@vitest/ui@4.0.8)(happy-dom@20.0.10)(jiti@2.4.2)(jsdom@26.1.0)(lightningcss@1.30.1)(terser@5.43.1):
     dependencies:
       '@vitest/expect': 4.0.8
-      '@vitest/mocker': 4.0.8(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
+      '@vitest/mocker': 4.0.8(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))
       '@vitest/pretty-format': 4.0.8
       '@vitest/runner': 4.0.8
       '@vitest/snapshot': 4.0.8
@@ -8264,11 +8270,11 @@ snapshots:
       tinyexec: 0.3.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
+      vite: 7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 22.16.1
-      '@vitest/browser-playwright': 4.0.8(playwright@1.56.1)(vite@7.2.2(@types/node@22.16.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)
+      '@types/node': 24.10.0
+      '@vitest/browser-playwright': 4.0.8(playwright@1.56.1)(vite@7.2.2(@types/node@24.10.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1))(vitest@4.0.8)
       '@vitest/ui': 4.0.8(vitest@4.0.8)
       happy-dom: 20.0.10
       jsdom: 26.1.0
